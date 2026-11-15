@@ -4,6 +4,7 @@
   América do Sul no zoom 4 e a região do quadro NISAR nos zooms 5 a 8.
 - Natural Earth (domínio público): países, estados do Brasil, rios e cidades.
 - Fonte tipográfica em PBF para os rótulos do MapLibre (Open Sans, intervalo 0-255).
+  Vai para src/assets e é embutida no JavaScript: alguns hosts não servem .pbf.
 """
 import json
 import math
@@ -100,7 +101,7 @@ def main():
     (C.OUT / "basemap.json").write_text(json.dumps({"type": "FeatureCollection", "features": feats}, ensure_ascii=False, separators=(",", ":")))
     font = "Open Sans Semibold"
     lib.download("https://demotiles.maplibre.org/font/" + urllib.request.quote(font) + "/0-255.pbf",
-                 C.OUT / "fonts" / font.replace(" ", "") / "0-255.pbf")
+                 C.ROOT / "src" / "assets" / (font.replace(" ", "") + "-0-255.pbf"))
     lib.write_json({"tile_sources": sources, "font": font.replace(" ", ""),
                     "counts": {k: sum(1 for f in feats if f["properties"]["k"] == k) for k in ("country", "state", "river", "city")}},
                    C.CACHE / "basemap.json")

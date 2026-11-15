@@ -119,7 +119,7 @@ Fora das áreas processadas, o site consulta a mesma API ao vivo. Se a rede bloq
 
 - NASA Blue Marble Next Generation via GIBS WMTS (`BlueMarble_NextGeneration`, 2004-08-01, EPSG:3857): 158 tiles embutidos.
 - Natural Earth (domínio público): países 1:110m, estados do Brasil 1:50m, rios e cidades 1:10m.
-- Fonte dos rótulos: Open Sans Semibold em PBF (demotiles.maplibre.org).
+- Fonte dos rótulos: Open Sans Semibold em PBF (demotiles.maplibre.org), embutida no JavaScript.
 
 ## 9. Cenário dos rios voadores
 

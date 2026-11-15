@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type ImageSource, type Map as MlMap, type StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import glyphData from '../assets/OpenSansSemibold-0-255.pbf?inline';
 import { dataUrl } from '../lib/data';
 import { areaFromBox, boundsOf } from '../lib/geo';
 import { fmtDate, toMs } from '../lib/time';
@@ -39,6 +40,20 @@ interface Props {
 }
 
 const FONT = 'OpenSansSemibold';
+
+// Os glifos dos rótulos vão embutidos no bundle e são entregues por um protocolo próprio:
+// assim o mapa não depende de um servidor que saiba servir arquivos .pbf.
+let glyphBytes: ArrayBuffer | null = null;
+maplibregl.addProtocol('sarfont', async (req) => {
+  if (!req.url.endsWith('/0-255')) return { data: new ArrayBuffer(0) };
+  if (!glyphBytes) {
+    const bin = atob(glyphData.slice(glyphData.indexOf(',') + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    glyphBytes = bytes.buffer;
+  }
+  return { data: glyphBytes.slice(0) };
+});
 const ORDER = ['img-nisar', 'img-aoi', 'ov-forest', 'ov-waterhist', 'ov-water', 'ov-change', 'ov-corr', 'frame-line', 'aoi-fill', 'aoi-line', 'fires-glow', 'fires-core', 'aoi-label', 'city-label'];
 
 function baseStyle(m: Manifest): StyleSpecification {
@@ -49,7 +64,7 @@ function baseStyle(m: Manifest): StyleSpecification {
   return {
     version: 8,
     projection: { type: 'globe' },
-    glyphs: `${dataUrl('fonts')}/{fontstack}/{range}.pbf`,
+    glyphs: 'sarfont://{fontstack}/{range}',
     sky: { 'atmosphere-blend': ['interpolate', ['linear'], ['zoom'], 0, 1, 5, 1, 7, 0] },
     sources: {
       'bm-world': { ...src('world'), attribution: 'NASA Blue Marble (GIBS) · Natural Earth' },
