@@ -56,8 +56,8 @@ function style(data: RoData): StyleSpecification {
     version: 8,
     glyphs: 'sarfont://{fontstack}/{range}',
     sources: {
-      w: { type: 'raster', tiles, tileSize: 256, minzoom: 0, maxzoom: 4, attribution: 'NASA Blue Marble · Natural Earth · SEDAM-RO · NISAR (NASA/ISRO, ASF) · INPE' },
-      sa: { type: 'raster', tiles, tileSize: 256, minzoom: 5, maxzoom: 6, bounds: [-82, -35, -34, 13] },
+      w: { type: 'raster', tiles, tileSize: 256, minzoom: 0, maxzoom: 3, attribution: 'NASA Blue Marble · Natural Earth · SEDAM-RO · NISAR (NASA/ISRO, ASF) · INPE' },
+      sa: { type: 'raster', tiles, tileSize: 256, minzoom: 4, maxzoom: 6, bounds: [-82, -35, -34, 13] },
       ro: { type: 'raster', tiles, tileSize: 256, minzoom: 7, maxzoom: 8, bounds: [-67.5, -14.5, -59, -7] },
       base: { type: 'geojson', data: dataUrl('basemap.json') },
       lc: { type: 'image', url: dataUrl(data.landcover.image), coordinates: lc },

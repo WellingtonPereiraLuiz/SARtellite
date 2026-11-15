@@ -88,7 +88,7 @@ GeoServer `https://geoportal.sedam.ro.gov.br/geoserver/ows` (WFS público):
 
 ## 8. Versão web (`r10_web.py`)
 
-- **Fundo do mapa:** NASA Blue Marble (via GIBS) em ladrilhos JPEG: mundo z0–4, América do Sul z5–6, Rondônia z7–8. Escurecido no estilo do mapa.
+- **Fundo do mapa:** NASA Blue Marble (via GIBS) em ladrilhos JPEG: mundo z0–3, América do Sul z4–6, Rondônia z7–8. Escurecido no estilo do mapa.
 - **Busca:** municípios de RO (SEDAM), estados e países (Natural Earth). Fora de RO o site só mostra um cartão de demonstração, sem dado no mapa.
 - **Contornos da floresta:** suavizados uma única vez (abre e fecha de ~80 m e simplificação). A área em hectares não muda: vem da detecção em pixels.
 

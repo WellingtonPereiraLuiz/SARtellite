@@ -114,8 +114,9 @@ def tiles():
         x0, y0 = xy(b[0], b[3], z); x1, y1 = xy(b[2], b[1], z)
         return [(z, x, y) for x in range(x0, x1 + 1) for y in range(y0, y1 + 1)]
 
-    todo = [(z, x, y) for z in range(5) for x in range(2**z) for y in range(2**z)]
-    todo += box((-82, -35, -34, 13), 5) + box((-82, -35, -34, 13), 6)
+    # mundo até z3; América do Sul z4–6; Rondônia z7–8 (cabe no limite de 512 arquivos do artifact)
+    todo = [(z, x, y) for z in range(4) for x in range(2**z) for y in range(2**z)]
+    todo += box((-82, -35, -34, 13), 4) + box((-82, -35, -34, 13), 5) + box((-82, -35, -34, 13), 6)
     todo += box((-67.5, -14.5, -59, -7), 7) + box((-67.5, -14.5, -59, -7), 8)
 
     def get(t):
