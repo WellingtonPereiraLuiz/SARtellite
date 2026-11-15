@@ -95,3 +95,20 @@ A regra da floresta está em [DATA_PROVENANCE.md](DATA_PROVENANCE.md). A primeir
 Leo, Bryan, Wellington e Diogo. Pitch em [PITCH.md](PITCH.md). Fontes em [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).
 
 NISAR: NASA/JPL-Caltech e ISRO, via ASF DAAC. Cobertura do solo: Impact Observatory, Microsoft e Esri. SEDAM-RO, IBGE, FUNAI, ICMBio. INPE (DETER e Programa Queimadas). NASA Blue Marble. Natural Earth. MapLibre GL JS.
+
+
+## Atualização diária (sempre no ar)
+
+O arquivo `.github/workflows/atualizar-diario.yml` roda o pipeline inteiro todo dia às 07h23 de Rondônia, testa, monta o site e publica no GitHub Pages. Se uma fonte estiver fora do ar, o site continua com os dados do dia anterior.
+
+Para ligar, uma vez só:
+
+1. Levar este código para a branch `main` (o GitHub só roda agendamentos da branch principal).
+2. Em **Settings > Pages**, escolher **Source: GitHub Actions**.
+3. Em **Settings > Secrets and variables > Actions**, criar:
+   - `FIRMS_MAP_KEY`: chave gratuita do NASA FIRMS, pedida em https://firms.modaps.eosdis.nasa.gov/api/map_key/
+   - `METEOMATICS_USERNAME` e `METEOMATICS_PASSWORD`: a conta da Meteomatics.
+
+As senhas ficam só nos Secrets do GitHub. Nunca entram no código nem no site.
+
+O que muda a cada dia: os focos do FIRMS e a chuva. O NISAR passa a cada 12 dias e o Sentinel-1 a cada 6 a 12 dias, então lugares novos de floresta aparecem nesse ritmo.

@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-11-15T04:40:23+00:00",
+ "generated_at": "2026-11-15T13:53:19+00:00",
  "nisar": {
   "passagens": 412,
   "quadros": 45,
@@ -66,9 +66,9 @@
   }
  },
  "fogo": {
-  "focos": 28985,
-  "fonte": "INPE Programa Queimadas (detecções VIIRS e MODIS)",
-  "url": "https://terrabrasilis.dpi.inpe.br/queimadas/portal/dados-abertos/"
+  "focos": 28593,
+  "fonte": "NASA FIRMS (últimos dias) + INPE Programa Queimadas (histórico, mesmas detecções VIIRS e MODIS)",
+  "url": "https://firms.modaps.eosdis.nasa.gov/"
  },
  "chuva": {
   "fonte": "Meteomatics Weather API",

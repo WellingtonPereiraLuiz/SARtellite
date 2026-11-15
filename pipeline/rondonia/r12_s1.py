@@ -37,7 +37,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 O = OUT / "ro"
 CAT = "https://planetarycomputer.microsoft.com/api/stac/v1"
-T0, T1 = "2026-06-01", "2026-11-08"
+T0, T1 = "2026-06-01", dt.date.today().isoformat()
 QUEDA = 1.5      # dB abaixo da base para contar como queda
 ANEL = 1500      # metros: raio da floresta em volta
 FOLGA = 200      # metros entre a mancha e o anel

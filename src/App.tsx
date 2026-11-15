@@ -70,7 +70,7 @@ export default function App() {
               </div>
             )}
             <Suspense fallback={<div className="loading"><span className="pulse" /></div>}>
-              {view === 'perfil' && <Profile data={data} onOpenMun={(id) => { setFilters((f) => ({ ...f, layers: ALL })); setJump((j) => ({ id, n: j.n + 1 })); go('mapa'); }} />}
+              {view === 'perfil' && <Profile data={data} onOpenMun={(id) => { setFilters((f) => ({ ...f, layers: ALL })); setJump((j) => ({ id, n: j.n + 1 })); go('mapa'); }} onOpenEvent={(id) => { setFilters((f) => ({ ...f, layers: ALL, fracos: true, duvidas: true })); setJump((j) => ({ id, n: j.n + 1, ev: true })); go('mapa'); }} />}
               {view === 'como-funciona' && <ComoFunciona data={data} onMap={(id) => { setFilters((f) => ({ ...f, layers: ALL, fracos: true, duvidas: true })); setJump((j) => ({ id, n: j.n + 1, ev: true })); go('mapa'); }} />}
               {view === 'fontes' && <Fontes data={data} />}
               {view === 'danca' && <Danca data={data} onMap={() => openMap('floresta')} />}

@@ -189,8 +189,8 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
       <div className={`legend glass${pick ? ' hidden-l' : ''}`} aria-label="Legenda">
         {filters.layers.fogo && <span><i style={{ background: COLORS.fogo }} />queimada</span>}
         {filters.layers.floresta && <span><i style={{ background: COLORS.floresta }} />floresta derrubada</span>}
-        {filters.layers.floresta && data.rain && <span><i className="ring" style={{ borderColor: COLORS.chuva }} />pode ser chuva</span>}
-        {filters.layers.floresta && data.meta.s1 && <span><i className="ring" style={{ borderColor: COLORS.s1 }} />Sentinel-1 também viu</span>}
+        {filters.layers.floresta && data.rain && <span><i className="ring dash" style={{ borderColor: COLORS.floresta }} />pode ser chuva</span>}
+        {filters.layers.floresta && data.meta.s1 && <span><i className="ring dbl" style={{ background: COLORS.floresta }} />2 satélites viram</span>}
         {filters.layers.floresta && terreno && <span><i className="hatch" />sem dado de floresta</span>}
       </div>
 

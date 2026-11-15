@@ -10,7 +10,7 @@ export type Pick =
   | { kind: 'municipio'; id: string }
   | null;
 
-export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', chuva: '#5FB8FF', s1: '#C9A6FF' };
+export const COLORS = { fogo: '#FF4D3D', floresta: '#FF5FB0', chuva: '#5FB8FF', s1: '#C9A6FF' };
 export const RO_BOUNDS: [[number, number], [number, number]] = [[-66.85, -13.75], [-59.75, -7.95]];
 
 interface Props {
@@ -48,8 +48,9 @@ const pt = (lon: number, lat: number) => ({ type: 'Point', coordinates: [lon, la
 
 type Quad = [[number, number], [number, number], [number, number], [number, number]];
 function style(data: RoData): StyleSpecification {
-  const s2src: Record<string, unknown> = data.s2 ? { s2: { type: 'image', url: dataUrl(data.s2.image), coordinates: data.s2.corners as Quad } } : {};
-  const s2layers = data.s2 ? [{ id: 's2', type: 'raster', source: 's2', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 4.2, 0, 5.4, 1], 'raster-resampling': 'linear', 'raster-contrast': 0.12, 'raster-saturation': 0.1, 'raster-fade-duration': 0 } }] : [];
+  const parts = data.s2 ? (data.s2.tiles ?? (data.s2.image ? [{ image: data.s2.image, corners: data.s2.corners! }] : [])) : [];
+  const s2src: Record<string, unknown> = Object.fromEntries(parts.map((t, i) => [`s2_${i}`, { type: 'image', url: dataUrl(t.image), coordinates: t.corners as Quad }]));
+  const s2layers = parts.map((_, i) => ({ id: `s2_${i}`, type: 'raster', source: `s2_${i}`, paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 4.2, 0, 5.4, 1], 'raster-resampling': 'linear', 'raster-contrast': 0.12, 'raster-saturation': 0.1, 'raster-fade-duration': 0 } }));
 
   const tiles = [`${dataUrl('tiles/bm')}/{z}/{x}/{y}.jpg`];
   const bm = { 'raster-saturation': -0.15, 'raster-brightness-max': 0.72, 'raster-contrast': 0.1, 'raster-fade-duration': 300 };
@@ -58,7 +59,7 @@ function style(data: RoData): StyleSpecification {
     version: 8,
     glyphs: 'sarfont://{fontstack}/{range}',
     sources: {
-      w: { type: 'raster', tiles, tileSize: 256, minzoom: 0, maxzoom: 3, attribution: 'NASA Blue Marble · Natural Earth · SEDAM-RO · NISAR (NASA/ISRO, ASF) · INPE' },
+      w: { type: 'raster', tiles, tileSize: 256, minzoom: 0, maxzoom: 3, attribution: 'NASA Blue Marble · Natural Earth · SEDAM-RO · NISAR (NASA/ISRO, ASF) · NASA FIRMS · Sentinel-1/2 (ESA) · Meteomatics · INPE DETER' },
       sa: { type: 'raster', tiles, tileSize: 256, minzoom: 4, maxzoom: 6, bounds: [-82, -35, -34, 13] },
       ro: { type: 'raster', tiles, tileSize: 256, minzoom: 7, maxzoom: 8, bounds: [-67.5, -14.5, -59, -7] },
       base: { type: 'geojson', data: dataUrl('basemap.json') },
@@ -110,7 +111,7 @@ function style(data: RoData): StyleSpecification {
       {
         id: 'forest-s1', type: 'circle', source: 'forestpt', maxzoom: 11.5, filter: ['==', ['get', 'a'], 1],
         paint: {
-          'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': COLORS.s1, 'circle-stroke-width': 2,
+          'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': '#ffffff', 'circle-stroke-width': 1.5,
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 7, ['*', 0.5, ['sqrt', ['get', 'ha']]]], 10, ['+', 11, ['sqrt', ['get', 'ha']]]],
           'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 0.9, 11.5, 0],
         },
@@ -118,15 +119,18 @@ function style(data: RoData): StyleSpecification {
       {
         id: 'forest-pt', type: 'circle', source: 'forestpt', maxzoom: 11.5,
         paint: {
-          'circle-color': COLORS.floresta,
+          'circle-color': ['case', ['==', ['get', 'v'], 'duvida'], 'rgba(20,10,16,0.55)', COLORS.floresta],
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 3, ['*', 0.5, ['sqrt', ['get', 'ha']]]], 10, ['+', 6, ['sqrt', ['get', 'ha']]]],
-          'circle-stroke-color': ['case', ['==', ['get', 'v'], 'duvida'], COLORS.chuva, '#ffffff'], 'circle-stroke-width': ['case', ['get', 'sel'], 3, ['==', ['get', 'v'], 'duvida'], 2.4, ['==', ['get', 'c'], 'confirmado'], 1.8, 0.6],
+          'circle-stroke-color': ['case', ['==', ['get', 'v'], 'duvida'], COLORS.floresta, '#ffffff'], 'circle-stroke-width': ['case', ['get', 'sel'], 3, ['==', ['get', 'v'], 'duvida'], 2.2, 1.2],
           'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
           'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
         },
       },
-      { id: 'forest-fill', type: 'fill', source: 'forest', minzoom: 9.5, paint: { 'fill-color': ['case', ['==', ['get', 'v'], 'duvida'], COLORS.chuva, COLORS.floresta], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.85] } },
-      { id: 'forest-line', type: 'line', source: 'forest', minzoom: 9.5, paint: { 'line-color': '#fff4e8', 'line-width': ['case', ['get', 'sel'], 3, 1], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
+      // de perto: só o contorno, para a foto real aparecer por baixo. Tracejado = pode ser chuva
+      { id: 'forest-fill', type: 'fill', source: 'forest', minzoom: 9.5, paint: { 'fill-color': COLORS.floresta, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, ['case', ['==', ['get', 'v'], 'duvida'], 0.05, 0.16]] } },
+      { id: 'forest-case', type: 'line', source: 'forest', minzoom: 9.5, paint: { 'line-color': 'rgba(10,6,10,0.75)', 'line-width': ['case', ['get', 'sel'], 6, 4.5], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
+      { id: 'forest-line', type: 'line', source: 'forest', minzoom: 9.5, filter: ['!=', ['get', 'v'], 'duvida'], paint: { 'line-color': COLORS.floresta, 'line-width': ['case', ['get', 'sel'], 3.6, 2.4], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
+      { id: 'forest-line-d', type: 'line', source: 'forest', minzoom: 9.5, filter: ['==', ['get', 'v'], 'duvida'], paint: { 'line-color': COLORS.floresta, 'line-width': ['case', ['get', 'sel'], 3.6, 2.4], 'line-dasharray': [2, 1.6], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
       {
         id: 'mun-label', type: 'symbol', source: 'munpt', minzoom: 6.3,
         layout: { 'text-field': ['get', 'nome'], 'text-font': [FONT], 'text-size': ['interpolate', ['linear'], ['zoom'], 6.3, 10, 10, 14], 'text-max-width': 9, 'text-padding': 6 },
@@ -151,7 +155,7 @@ export default function MapView(p: Props) {
     let map: MlMap;
     try {
       map = new maplibregl.Map({
-        container: el.current, style: style(p.data), center: [-60, -15], zoom: 2.4, minZoom: 1.2, maxZoom: 13.5,
+        container: el.current, style: style(p.data), center: [-60, -15], zoom: 2.4, minZoom: 1.2, maxZoom: 15.5,
         dragRotate: false, pitchWithRotate: false, attributionControl: false, fadeDuration: 250,
       });
     } catch (e) {
@@ -170,6 +174,20 @@ export default function MapView(p: Props) {
       usedFocus.current = f?.n ?? -1;
       map.fitBounds(f?.bounds ?? RO_BOUNDS, { padding: pad(), maxZoom: f?.max ?? 11.5, duration: latest.current.reduce ? 0 : 3200, essential: true, curve: 1.6 });
     });
+    const added = new Set<string>();
+    const sharp = () => {
+      if (map.getZoom() < 9.2) return;
+      const b = map.getBounds();
+      for (const [id, pch] of Object.entries(latest.current.data.patches)) {
+        if (added.has(id)) continue;
+        const [[w, n], , [e, s]] = pch.corners;
+        if (e < b.getWest() || w > b.getEast() || n < b.getSouth() || s > b.getNorth()) continue;
+        added.add(id);
+        map.addSource(`p_${id}`, { type: 'image', url: dataUrl(pch.img), coordinates: pch.corners as Quad });
+        map.addLayer({ id: `p_${id}`, type: 'raster', source: `p_${id}`, minzoom: 9, paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 9.4, 0, 10.6, 1], 'raster-resampling': 'linear', 'raster-fade-duration': 200 } }, 'lc');
+      }
+    };
+    map.on('moveend', sharp);
     map.on('moveend', () => {
       const c = map.getCenter();
       const [[x0, y0], [x1, y1]] = RO_BOUNDS;

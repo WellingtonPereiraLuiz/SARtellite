@@ -62,7 +62,9 @@ def fires():
     write_json({"start": NISAR_START, "columns": ["lon", "lat", "dia", "mun", "floresta", "hora_local"], "mun_ids": [m["id"] for m in places],
                 "rows": rows}, O / "fires.json", compact=True)
     m = read_json(O / "meta.json")
-    m["fogo"]["focos"] = len(rows)
+    src = read_json(CACHE / "fires_ro.json")
+    m["fogo"].update(focos=len(rows), fonte=src["source"], url=src["source_url"])
+    m["generated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     write_json(m, O / "meta.json")
     print("focos:", len(rows), "na floresta:", sum(r[4] for r in rows), "sem município:", sum(r[3] < 0 for r in rows))
 

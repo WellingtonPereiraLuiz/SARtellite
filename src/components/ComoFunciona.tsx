@@ -175,7 +175,7 @@ export default function ComoFunciona({ data, onMap }: { data: RoData; onMap: (id
               <li><i style={{ background: COLORS.floresta }} /><b>NISAR</b><span>o eco caiu e ficou baixo só aqui</span><em>✓</em></li>
               <li><i style={{ background: COLORS.chuva }} /><b>Meteomatics</b><span>{c.veredito === 'duvida' ? 'choveu perto: pode ser umidade' : 'não é efeito de chuva'}</span><em>{c.veredito === 'duvida' ? '?' : '✓'}</em></li>
               <li><i style={{ background: COLORS.s1 }} /><b>Sentinel-1</b><span>{s1.alerta ? `copa caiu em ${fmtDate(s1.alerta, false)}` : 'não viu na copa'}</span><em>{s1.alerta ? '✓' : '–'}</em></li>
-              <li><i style={{ background: COLORS.fogo }} /><b>Focos de calor (INPE)</b><span>{e.fogo_dias.length ? `fogo perto em ${e.fogo_dias.length} dias` : 'sem fogo perto'}</span><em>{e.fogo_dias.length ? '🔥' : '–'}</em></li>
+              <li><i style={{ background: COLORS.fogo }} /><b>Focos de calor (NASA FIRMS)</b><span>{e.fogo_dias.length ? `fogo perto em ${e.fogo_dias.length} dias` : 'sem fogo perto'}</span><em>{e.fogo_dias.length ? '🔥' : '–'}</em></li>
               {e.inpe.length > 0 && <li><i style={{ background: '#9be15d' }} /><b>INPE DETER</b><span>também registrou o lugar</span><em>✓</em></li>}
             </ul>
             <p className="cf-verdict">{c.veredito === 'duvida' ? 'Provável derrubada, mas esperar a próxima passagem seca.' : 'Floresta derrubada, com mais de um satélite concordando.'}</p>

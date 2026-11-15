@@ -77,7 +77,7 @@ export function AlertaDuasEtapas({ s, fogo }: { s: S1; fogo: number }) {
       <ul className="steps2">
         <li><i className="k1" /><span>1. Sentinel-1 avisa</span><b>{a ? fmtDate(a, false) : '—'}</b></li>
         <li><i className="k2" /><span>2. NISAR confirma</span><b>{fmtDate(s.queda_nisar, false)}</b></li>
-        <li><i className="k3" /><span>Fogo perto (INPE)</span><b>{fogo ? `${fogo} ${fogo === 1 ? 'dia' : 'dias'}` : 'não'}</b></li>
+        <li><i className="k3" /><span>Fogo perto (FIRMS)</span><b>{fogo ? `${fogo} ${fogo === 1 ? 'dia' : 'dias'}` : 'não'}</b></li>
       </ul>
       <p className="note">{txt} {s.revisita_juntos_dias ? `Juntos, os dois dão uma imagem a cada ${fmtNum(s.revisita_juntos_dias, 1)} dias aqui.` : ''}</p>
     </section>
@@ -154,7 +154,7 @@ export function FireDetail({ day, hour, forest, start, onClose }: { day: number;
     <Shell tag="Queimada" color={COLORS.fogo} title={`Foco de calor em ${fmtDate(d)}${hour !== undefined ? `, por volta das ${hour}h` : ''}`} onClose={onClose}>
       <ul className="facts">
         <li><span>Terreno</span>{forest ? 'dentro de floresta' : 'área aberta (pasto, lavoura ou capoeira)'}</li>
-        <li><span>Satélite</span>VIIRS ou MODIS (NASA/NOAA), via INPE</li>
+        <li><span>Satélite</span>VIIRS ou MODIS (NASA/NOAA), via NASA FIRMS</li>
       </ul>
       <p className="note">Foco de calor é um ponto quente visto do espaço. Não é o tamanho da área queimada.</p>
     </Shell>
