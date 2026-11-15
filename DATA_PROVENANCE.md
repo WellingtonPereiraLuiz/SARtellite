@@ -75,9 +75,9 @@ GeoServer `https://geoportal.sedam.ro.gov.br/geoserver/ows` (WFS público):
 - `cuc:limites_ucs_estaduais`
 - `icmbio:limites_ucs_federais` (filtrado para RO)
 
-## 6. Fogo (só pista)
+## 6. Queimadas (camada do mapa e pista da floresta)
 
-- **Fonte:** INPE Programa Queimadas, arquivos mensais, Rondônia, satélites polares (VIIRS S-NPP, NOAA-20, NOAA-21; MODIS Aqua e Terra). 29.427 focos.
+- **Fonte:** INPE Programa Queimadas, arquivos mensais, Rondônia, satélites polares (VIIRS S-NPP, NOAA-20, NOAA-21; MODIS Aqua e Terra). 28.984 focos entre 17 jun e 7 nov 2026 (só os dias cobertos pelos 12 períodos do NISAR; `r10_web.py`). Cada foco recebe o município e se caiu em floresta (cobertura do solo 2023).
 - **Uso:** o cartão diz se houve foco a até cerca de 360 m da mancha, de 45 dias antes da detecção em diante.
 - **FIRMS:** o NASA FIRMS direto exige `FIRMS_MAP_KEY`; com ela, `r03_fires.py` troca a fonte sozinho.
 
@@ -85,3 +85,11 @@ GeoServer `https://geoportal.sedam.ro.gov.br/geoserver/ows` (WFS público):
 
 - **Cobertura do solo:** Impact Observatory 10 m, ano 2023, reamostrada por moda para 180 m e redesenhada em Web Mercator. É de 2023: não mostra 2026.
 - **Contexto:** países, estados e rios da Natural Earth.
+
+## 8. Versão web (`r10_web.py`)
+
+- **Fundo do mapa:** NASA Blue Marble (via GIBS) em ladrilhos JPEG: mundo z0–4, América do Sul z5–6, Rondônia z7–8. Escurecido no estilo do mapa.
+- **Busca:** municípios de RO (SEDAM), estados e países (Natural Earth). Fora de RO o site só mostra um cartão de demonstração, sem dado no mapa.
+- **Contornos da floresta:** suavizados uma única vez (abre e fecha de ~80 m e simplificação). A área em hectares não muda: vem da detecção em pixels.
+
+Lista completa de fontes e referências: [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).

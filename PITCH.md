@@ -1,63 +1,85 @@
-# Pitch do SARtellite (versão Rondônia)
+# Pitch do SARtellite (v3)
 
 Equipe Astrópodes · NASA Space Apps Challenge 2026 · Vilhena, RO · Dancing with the SARs
+Fontes de cada frase: [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md) (seção 2).
 
 ## Em uma frase
 
-Um mapa de Rondônia que mostra, em palavras simples, onde a floresta caiu e onde a lavoura foi colhida, usando só o radar NISAR.
+Queimadas, floresta derrubada e lavouras em Rondônia, vistas pelo radar NISAR mesmo debaixo de nuvem e fumaça, numa linguagem que uma criança entende.
 
-## Pitch de 90 segundos
+## Regras antes de abrir a boca
 
-> Somos a equipe Astrópodes, de Rondônia.
->
-> O NISAR, radar da NASA com a Índia, passou 412 vezes sobre o nosso estado desde junho. Ele enxerga através da nuvem e da fumaça. Só que imagem de radar ninguém entende.
->
-> O SARtellite traduz essas 412 imagens em duas respostas: **onde a floresta caiu** e **onde a lavoura foi colhida ou plantada**. *(mostrar o mapa)*
->
-> Por que as duas juntas? Porque, para o radar, colher milho e derrubar floresta parecem a mesma coisa: o eco cai. Na nossa primeira tentativa, a maior mudança que o radar achou era colheita. Separando pelo tipo de terreno, a plataforma não confunde agricultor com desmatador.
->
-> Clicando num ponto, você lê: "A floresta pode ter sido derrubada em Candeias do Jamari, cerca de 62 hectares, 86 campos de futebol. O INPE também viu." E vê o eco do radar despencando enquanto a floresta em volta continua igual. *(abrir o cartão)*
->
-> Somos honestos sobre o limite: com as imagens públicas de prévia, uma em cada quatro manchas que o radar marca bate com o INPE. Dentro de Terra Indígena, só mostramos o que o INPE confirmou. Com o dado calibrado do NISAR, que é o próximo passo, a precisão sobe.
->
-> A linha do tempo mostra o ritmo do estado a cada 12 dias: a colheita do milho em julho, a soja começando em outubro, a floresta caindo no fim da seca.
->
-> Nossa ideia é simples: dar memória ao território.
+- O herói é o **NISAR**. Queimadas (INPE) e municípios (SEDAM) são contexto. Não vire um pitch de fogo.
+- **Nunca** "o radar mostra o efeito do El Niño". Sempre: *o El Niño aumenta o risco; o radar mostra o que já mudou no chão.*
+- Não dizer "seca histórica da Amazônia". Dizer o que está documentado: Porto Velho em emergência.
+- O agro não é vilão: é vítima da seca e usuário da ferramenta.
+- Não usar "6,25 ha" (sem fonte confirmada).
+- Dizer "a floresta pode ter sido derrubada", nunca "desmatamento ilegal".
 
-### De onde vem cada número
+## Roteiro em 5 tempos (cerca de 2 min)
 
-| Frase | Valor | Onde está |
-|---|---|---|
-| 412 passagens | 412 prévias NISAR GCOV, 18 jun a 30 out 2026 | `meta.json` → nisar |
-| 62 ha em Candeias do Jamari, INPE também viu | evento do topo da lista "O INPE também viu"; o DETER registrou degradação no mesmo lugar | `events.json` |
-| uma em cada quatro | 11 de 46 manchas coincidem com alertas DETER | `meta.json` → floresta |
-| colheita em julho, soja em outubro | colunas da linha do tempo de lavoura | site |
+**1. MUNDO** · *"Este ano o Pacífico esquentou como quase nunca. De agosto a outubro, o El Niño chegou a +2 °C, a segunda maior marca para essa época desde 1950."*
 
-**Antes de falar, confira o evento exato:** abra a lista, clique no primeiro cartão "O INPE também viu" e leia em voz alta o município e os hectares que aparecem.
+**2. AMAZÔNIA** · *"Quando o El Niño é forte, chove menos na Amazônia. E a floresta é a bomba d'água que ajuda a fazer chuva para o continente."*
 
-## Roteiro de demonstração (60 a 90 s)
+**3. RONDÔNIA** · *"Aqui, Porto Velho entrou em emergência pela estiagem em outubro: quase 23 mil pessoas afetadas. É também o estado do agro: milho, soja, pasto. O produtor sofre com a seca como todo mundo."*
+
+**4. PROBLEMA** · *"Na seca vêm o fogo e a derrubada. E é exatamente quando a foto de satélite falha: nuvem e fumaça tapam tudo."*
+
+**5. SOLUÇÃO** · *"O NISAR, radar da NASA com a Índia, enxerga através da nuvem e da fumaça a cada 12 dias. Ele passou 412 vezes sobre Rondônia desde junho. O SARtellite traduz isso em três respostas: onde teve queimada, onde a floresta caiu e onde a lavoura foi colhida ou plantada."* (abrir o mapa)
+
+**Fecho:** *"O El Niño a gente não controla. A floresta em pé, a gente pode enxergar e proteger, mesmo debaixo da fumaça."*
+
+## 7 slides (em inglês)
+
+| # | Title | On screen | Speaker note (PT) |
+|---|---|---|---|
+| 1 | **SARtellite** | "Seeing the forest through the smoke." Team Astrópodes · Vilhena, RO | Apresentar a equipe em 1 frase |
+| 2 | **A Super El Niño year** | +2.0 °C (Aug–Oct 2026), 2nd highest for the season since 1950 (NOAA) | Tempo 1. Só o número grande |
+| 3 | **The Amazon is a water pump** | Forest → rain. Less forest, less rain | Tempo 2. Uma imagem, uma seta |
+| 4 | **Rondônia feels it** | Porto Velho: drought emergency, ~22,900 people (Oct 2026) | Tempo 3. Agro como vítima |
+| 5 | **Smoke and clouds blind optical satellites** | Photo vs. radar, side by side | Tempo 4 |
+| 6 | **NISAR sees through it** | Live demo: fires · forest loss · crops, every 12 days | Tempo 5. Ir para o site |
+| 7 | **What's next** | Calibrated 20 m NISAR · alerts per municipality · any NISAR-covered region | "O El Niño a gente não controla…" |
+
+## Demonstração (60 a 90 s)
 
 | Tempo | Ação | Fala |
 |---|---|---|
-| 0 a 10 s | Site aberto em "Rondônia inteira". Apontar os dois números à esquerda. | "Desde junho: tantos hectares de floresta, tantos mil de lavoura." |
-| 10 a 30 s | Clicar no primeiro cartão "O INPE também viu". | Ler a frase e mostrar o gráfico: "a linha laranja cai, a tracejada não". |
-| 30 a 45 s | Clicar em "Ver passar o tempo". | "Cada coluna é uma volta de 12 dias do NISAR." |
-| 45 a 60 s | Escolher Vilhena no filtro de município. | "Aqui é lavoura: o radar mostra a colheita e o plantio." |
-| 60 a 75 s | Marcar "Mostrar Terras Indígenas…". | "Dentro delas, só aparece o que o INPE confirmou." |
-| 75 a 90 s | Aba Fontes, seção de conferência. | "Este é o nosso acerto, sem maquiagem." |
+| 0 a 10 s | Início: apontar os três números. | "Desde junho: focos de queimada, floresta derrubada, lavoura em movimento." |
+| 10 a 20 s | Clicar **Abrir o mapa** e deixar o voo chegar em Rondônia. | "Isto é o que o radar viu." |
+| 20 a 40 s | No painel, clicar a primeira de **Maiores derrubadas**. | Ler o cartão: "62 ha em Candeias do Jamari, o INPE também viu. A linha laranja cai, a tracejada não." |
+| 40 a 55 s | Na linha do tempo, ligar **Lavoura** e desligar **Floresta**. | "Você escolhe o que comparar: o fogo sobe em agosto, a soja começa em outubro." |
+| 55 a 70 s | Buscar **Bolívia**. | "Fora de Rondônia ainda é demonstração: nenhuma mancha falsa no mapa." |
+| 70 a 90 s | **Meu painel** → Produtor rural → Vilhena. | "Cada um acompanha o seu município. O próximo passo é o aviso a cada passagem do satélite." |
+
+**Antes de falar, confira:** o município e os hectares do primeiro item da lista.
+
+## De onde vem cada número
+
+| Frase | Valor | Onde está |
+|---|---|---|
+| +2,0 °C, 2ª maior para a época | RONI ago–out 2026 | FONTES N1 |
+| Porto Velho, ~22,9 mil pessoas | Portaria 3.611/2026 e Prefeitura | FONTES N3, N4 |
+| 412 passagens | prévias NISAR GCOV, 18 jun a 30 out 2026 | `meta.json` → nisar |
+| 28.984 focos | INPE, 17 jun a 7 nov 2026 | `meta.json` → fogo |
+| 586 ha de floresta, 11 confirmados pelo INPE | 31 lugares mostrados | `meta.json` → floresta |
+| 638 mil ha de lavoura | quadrados de 1 km | `meta.json` → lavoura |
 
 ## Perguntas prováveis
 
-**O radar vê desmatamento debaixo da nuvem?** Sim, essa é a vantagem. Mas a prévia pública tem 180 m por pixel, então derrubadas pequenas escapam. Por isso mostramos o grau de certeza.
+**O El Niño causou isso?** Não dá para dizer. O El Niño aumenta o risco de seca e fogo. O radar mostra o que já mudou no chão.
 
-**Por que só 586 hectares, se o INPE viu mais?** Porque preferimos mostrar menos e acertar mais. Usamos regras de cautela: a queda tem que durar, a floresta em volta não pode ter mudado junto, e áreas protegidas exigem confirmação. E 38% do estado ficou sem dado bom de floresta nessas prévias.
+**El Niño ou agro?** O El Niño é o gatilho que não controlamos. A floresta é o amortecedor que podemos proteger.
 
-**O que é "plantio" no radar?** O eco subiu: planta crescendo, solo preparado ou solo molhado. O site avisa isso.
+**Por que só 586 ha, se o INPE viu mais?** Usamos a prévia pública do NISAR (180 m, 8 bits). Derrubadas pequenas somem no pixel. Preferimos mostrar menos e acertar mais; com o dado calibrado de 20 m, a precisão sobe. Está tudo na página Fontes.
 
-**Funciona fora de Rondônia?** Sim. O pipeline recebe uma caixa de coordenadas e faz tudo sozinho para qualquer lugar que o NISAR cubra.
+**O produtor ganha o quê?** Hoje, ver a própria região. Amanhã, um relatório para provar que produz sem derrubar (a lei europeia EUDR pede isso). Falta a linha de base de 2020, que o NISAR não tem: é o próximo passo, não promessa.
+
+**Funciona fora de Rondônia?** O pipeline roda para qualquer caixa coberta pelo NISAR. No site, fora de RO é só demonstração.
 
 ## Checklist
 
-- [ ] `npm run preview` aberto no notebook como plano B.
-- [ ] Zoom do navegador em 100%, tela cheia.
-- [ ] Ninguém diz "desmatamento ilegal" nem "detectamos crime". Dizemos "a floresta pode ter sido derrubada".
+- [ ] `npm run preview` aberto no notebook como plano B (funciona sem internet).
+- [ ] Navegador em tela cheia, zoom 100%.
+- [ ] Ninguém fala "o radar mostra o El Niño", "seca histórica da Amazônia" ou "desmatamento ilegal".

@@ -66,7 +66,7 @@
   }
  },
  "fogo": {
-  "focos": 29427,
+  "focos": 28984,
   "fonte": "INPE Programa Queimadas (detecções VIIRS e MODIS)",
   "url": "https://terrabrasilis.dpi.inpe.br/queimadas/portal/dados-abertos/"
  }

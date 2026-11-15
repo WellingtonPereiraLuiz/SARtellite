@@ -4,62 +4,49 @@
 
 Equipe **Astrópodes**, NASA Space Apps Challenge 2026 (Vilhena, RO), desafio **Dancing with the SARs**: uma aplicação interativa que usa o radar NISAR (NASA e ISRO) para acompanhar e mostrar mudanças na superfície da Terra.
 
-O SARtellite responde a duas perguntas em linguagem simples, num mapa plano de Rondônia com linha do tempo:
+O SARtellite mostra três mudanças de Rondônia em linguagem simples, num mapa em tela cheia com linha do tempo:
 
-1. **Onde a floresta foi derrubada?**
-2. **Onde a lavoura foi colhida ou plantada?**
+1. **Queimadas** (focos de calor do INPE: contexto de quando e onde houve fogo)
+2. **Floresta derrubada** (radar NISAR, polarização HV)
+3. **Lavoura colhida ou plantada** (radar NISAR, polarização HH)
 
-Os dois insights saem do NISAR. As outras fontes só dizem *onde* (SEDAM) e *conferem* (INPE).
+O herói é o NISAR: ele enxerga através de nuvem e fumaça, justamente na seca, quando o fogo e a derrubada acontecem. A narrativa do pitch (El Niño 2026 → Amazônia → Rondônia) está em [PITCH.md](PITCH.md), e **todas as fontes e referências** em [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).
 
-![Mapa](docs/screenshots/v2_01_mapa.jpg)
+![Mapa](docs/screenshots/v3_02_map.jpg)
 
 > Protótipo de estudantes. Não representa nem é certificado pela NASA, ISRO, INPE ou SEDAM.
 
-## Por que esses dois insights
+## Páginas
 
-- **Colher e derrubar mudam o radar do mesmo jeito.** Na primeira versão do projeto, a maior mudança de radar (Sentinel-1) no sul de RO era colheita, não desmatamento. Separar os dois pelo tipo de terreno evita o erro mais comum de quem usa radar.
-- **Eles contam a história de Rondônia:** a floresta que vira campo e o campo que produz.
-- **Rios, seca, fogo e deslizamento foram testados ou avaliados e descartados.** A água dos rios não muda o bastante na prévia de 180 m; seca não é medida direta; fogo não é dado de radar; deslizamento não é relevante no estado.
-
-## O que o site faz
-
-| Recurso | Situação |
+| Página | O que tem |
 |---|---|
-| Mapa plano de Rondônia com cobertura do solo, municípios, rios, TIs e UCs | Pronto |
-| Floresta derrubada: manchas com frase simples, data, lugar, tamanho em campos de futebol | Pronto |
-| Grau de certeza: "O INPE também viu", "Provável", "Sinal fraco" (escondido por padrão) | Pronto |
-| Gráfico do eco do radar no lugar e na floresta em volta, passagem a passagem | Pronto |
-| Lavoura: quadrados de 1 km coloridos por colheita ou plantio | Pronto |
-| Linha do tempo por volta de 12 dias do NISAR, com clique, arraste e reprodução | Pronto |
-| Filtros: município, áreas protegidas, sinais fracos, cores do terreno | Pronto |
-| Área sem dado bom de floresta marcada no mapa (38% do estado) | Pronto |
-| Páginas Como funciona, Fontes (com a conferência honesta) e Sobre | Pronto |
-| NISAR calibrado de 20 m (HDF5) | **Pendente**: exige Earthdata Login |
-| NASA FIRMS direto | **Pendente**: exige MAP_KEY; o pipeline troca sozinho quando houver |
+| **Início** | Frase curta, três números ao vivo (clicáveis), a história em 5 tempos e para quem serve |
+| **Mapa** | Fundo NASA Blue Marble do mundo todo, voo de abertura até RO, camadas Queimadas / Floresta / Lavoura com calor de longe e pontos de perto, busca de municípios, estados e países, filtros, cartão de detalhe com o eco do radar, lista das maiores derrubadas |
+| **Linha do tempo** | O usuário escolhe o que comparar (chips); cada série na própria escala; arrastar escolhe período, duplo clique volta a tudo, botão de reprodução |
+| **Fora de RO** | Cartão "Demonstração" com lentes futuras (alagamentos, seca dos rios). Nenhuma mancha falsa no mapa |
+| **Meu painel** | Demonstração: perfil (produtor, prefeitura, comunidade), municípios seguidos com números reais, avisos (em breve), cartão EUDR para o produtor. Fica só no navegador |
+| **Como funciona** | Explicador animado do radar e o que dá e não dá para dizer |
+| **Fontes** | Tabela de fontes e a conferência honesta com o INPE |
 
 ## Números (de `public/data/ro/meta.json`)
 
 - **NISAR:** 412 passagens sobre Rondônia, 45 quadros, de 18 jun a 30 out 2026; 280 com polarização HV.
-- **Floresta:**
-  - 46 manchas detectadas; 31 mostradas (11 o INPE também viu, 20 prováveis), somando 586 ha.
-  - 16 das 31 tiveram fogo perto.
-- **Lavoura:** 638 mil ha mudaram; cerca de 270 mil colhidos e 305 mil plantados ou preparados (quadrados de 1 km com mais de 25% da lavoura mudando).
-- **Conferência com o DETER:**
-  - 11 de 46 manchas (24%) coincidem com alertas do INPE.
-  - Pixel a pixel, 11% do que marcamos fica perto de um corte raso do DETER, e achamos só 2% dos polígonos do DETER.
-  - Motivo: a prévia pública tem 8 bits e 180 m. Está escrito na página Fontes.
+- **Queimadas:** 28.984 focos (INPE, 17 jun a 7 nov 2026), 47% em floresta.
+- **Floresta:** 46 manchas detectadas; 31 mostradas (11 o INPE também viu, 20 prováveis), somando 586 ha.
+- **Lavoura:** 638 mil ha mudaram (quadrados de 1 km).
+- **Conferência com o DETER:** 11 de 46 manchas (24%) coincidem; pixel a pixel, 11% de precisão perto de corte raso e 2% dos polígonos achados. Motivo: prévia pública de 8 bits e 180 m. Está na página Fontes.
 
 ## Rodar
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 10 testes: períodos, filtros, regras de cautela, linguagem
+npm test           # 15 testes: períodos, filtros, queimadas, busca, regras de cautela, linguagem
 npm run build      # checa tipos e gera dist/
 npm run preview    # http://localhost:4173
 ```
 
-Site estático, sem chave nem servidor. `dist/` tem cerca de 3 MB. Funciona sem internet.
+Site estático, sem chave nem servidor. Funciona sem internet (o fundo do mapa vem junto em `public/data/tiles`).
 
 ## Publicar
 
@@ -88,6 +75,7 @@ bash pipeline/rondonia/run_all.sh       # 30 a 40 minutos
 | `r06_detect.py` | Detecção de floresta (HV) e lavoura (HH) + conferência com DETER |
 | `r07_events.py` | Eventos com frase, lugar, certeza, série do radar e pistas |
 | `r08_basemap.py` / `r09_meta.py` | Mapa base, área sem cobertura e resumo |
+| `r10_web.py` | Focos para a web (só dentro dos períodos do NISAR), contornos suaves, busca de lugares, ladrilhos Blue Marble e imagem da capa |
 
 A regra da floresta está em [DATA_PROVENANCE.md](DATA_PROVENANCE.md). A primeira versão (antes e depois em duas áreas, com Sentinel) está em `pipeline/*.py` e `legacy/`, só como histórico.
 
@@ -100,6 +88,6 @@ A regra da floresta está em [DATA_PROVENANCE.md](DATA_PROVENANCE.md). A primeir
 
 ## Equipe e créditos
 
-Leo, Bryan, Wellington e Diogo. Pitch em [PITCH.md](PITCH.md).
+Leo, Bryan, Wellington e Diogo. Pitch em [PITCH.md](PITCH.md). Fontes em [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).
 
-NISAR: NASA/JPL-Caltech e ISRO, via ASF DAAC. Cobertura do solo: Impact Observatory, Microsoft e Esri. SEDAM-RO, IBGE, FUNAI, ICMBio. INPE (DETER e Programa Queimadas). Natural Earth. MapLibre GL JS.
+NISAR: NASA/JPL-Caltech e ISRO, via ASF DAAC. Cobertura do solo: Impact Observatory, Microsoft e Esri. SEDAM-RO, IBGE, FUNAI, ICMBio. INPE (DETER e Programa Queimadas). NASA Blue Marble. Natural Earth. MapLibre GL JS.

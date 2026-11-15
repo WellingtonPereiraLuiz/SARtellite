@@ -14,3 +14,4 @@ python r06_detect.py            # floresta (HV) e lavoura (HH) + conferência co
 python r07_events.py            # eventos, células de lavoura, municípios, períodos
 python r08_basemap.py           # mapa base e área sem cobertura
 python r09_meta.py              # resumo para as páginas Fontes e Sobre
+python r10_web.py              # versão web: focos, contornos suaves, busca, fundo Blue Marble e imagem de capa

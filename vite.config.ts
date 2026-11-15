@@ -6,5 +6,5 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   assetsInclude: ['**/*.pbf'], // glifos do mapa: importados com ?inline e embutidos no bundle
-  build: { target: 'es2020', chunkSizeWarningLimit: 1200 },
+  build: { target: 'es2020', chunkSizeWarningLimit: 1500 },
 });

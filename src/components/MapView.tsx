@@ -1,26 +1,33 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type Map as MlMap, type StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import glyphData from '../assets/OpenSansSemibold-0-255.pbf?inline';
-import { dataUrl, type FarmRow, type ForestEvent, type RoData } from '../lib/ro';
+import { dataUrl, type FarmRow, type FireRow, type ForestEvent, type RoData } from '../lib/ro';
 
 export type Pick =
   | { kind: 'floresta'; id: string }
   | { kind: 'lavoura'; row: FarmRow }
+  | { kind: 'fogo'; lon: number; lat: number; day: number; forest: boolean }
   | { kind: 'municipio'; id: string }
   | null;
+
+export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', colheita: '#F5C451', plantio: '#9BE15D', lavoura: '#C8E05A' };
+export const RO_BOUNDS: [[number, number], [number, number]] = [[-66.85, -13.75], [-59.75, -7.95]];
 
 interface Props {
   data: RoData;
   events: ForestEvent[];
   farm: FarmRow[];
+  fires: FireRow[];
   selectedId: string | null;
   municipio: string | null;
   showProtegidas: boolean;
-  showBase: boolean;
+  showTerreno: boolean;
   showNoCoverage: boolean;
-  focus: { bounds: [[number, number], [number, number]]; n: number } | null;
+  reduce: boolean;
+  focus: { bounds: [[number, number], [number, number]]; n: number; max?: number } | null;
   onPick: (p: Pick) => void;
+  onMoveOut: (outside: boolean) => void;
 }
 
 const FONT = 'OpenSansSemibold';
@@ -36,71 +43,100 @@ maplibregl.addProtocol('sarfont', async (req) => {
   return { data: glyphBytes.slice(0) };
 });
 
-export const COLORS = { floresta: '#FF6B3D', colheita: '#F2B33D', plantio: '#9BE15D', misto: '#D9D08A' };
-export const RO_BOUNDS: [[number, number], [number, number]] = [[-66.85, -13.75], [-59.75, -7.95]];
-
+const pad = () => (window.innerWidth < 760 ? { top: 250, bottom: 250, left: 20, right: 20 } : { top: 90, bottom: 200, left: 400, right: 60 });
 const fc = (features: unknown[]) => ({ type: 'FeatureCollection' as const, features });
 const feat = (geometry: unknown, properties: Record<string, unknown>) => ({ type: 'Feature' as const, geometry, properties });
-const geom = (gtype: string, coordinates: unknown) => ({ type: gtype, coordinates });
-
-function farmSquares(rows: FarmRow[]) {
-  const dLat = 0.54 / 111.32;
-  return fc(rows.map((r, i) => {
-    const dLon = dLat / Math.cos((r[1] * Math.PI) / 180);
-    const ring = [[r[0] - dLon, r[1] - dLat], [r[0] + dLon, r[1] - dLat], [r[0] + dLon, r[1] + dLat], [r[0] - dLon, r[1] + dLat], [r[0] - dLon, r[1] - dLat]];
-    return feat({ type: 'Polygon', coordinates: [ring] }, { i, s: r[5] });
-  }));
-}
+const pt = (lon: number, lat: number) => ({ type: 'Point', coordinates: [lon, lat] });
 
 function style(data: RoData): StyleSpecification {
+  const tiles = [`${dataUrl('tiles/bm')}/{z}/{x}/{y}.jpg`];
+  const bm = { 'raster-saturation': -0.15, 'raster-brightness-max': 0.72, 'raster-contrast': 0.1, 'raster-fade-duration': 300 };
+  const lc = data.landcover.corners as [[number, number], [number, number], [number, number], [number, number]];
   return {
     version: 8,
     glyphs: 'sarfont://{fontstack}/{range}',
     sources: {
-      base: { type: 'geojson', data: dataUrl('basemap.json'), attribution: 'Natural Earth · SEDAM-RO · Impact Observatory/Esri · NISAR: NASA/ISRO via ASF · INPE' },
-      lc: { type: 'image', url: dataUrl(data.landcover.image), coordinates: data.landcover.corners as [[number, number], [number, number], [number, number], [number, number]] },
-      nocov: { type: 'image', url: dataUrl(data.landcover.nocoverage), coordinates: data.landcover.corners as [[number, number], [number, number], [number, number], [number, number]] },
-      mun: { type: 'geojson', data: fc(data.municipios.map((m) => feat(geom(m.gtype, m.geometry), { id: m.id, nome: m.nome }))) },
-      munpt: { type: 'geojson', data: fc(data.municipios.map((m) => feat({ type: 'Point', coordinates: [m.lon, m.lat] }, { id: m.id, nome: m.nome }))) },
-      prot: { type: 'geojson', data: fc(data.protegidas.map((p) => feat(geom(p.gtype, p.geometry), { nome: p.nome, tipo: p.tipo }))) },
+      w: { type: 'raster', tiles, tileSize: 256, minzoom: 0, maxzoom: 4, attribution: 'NASA Blue Marble · Natural Earth · SEDAM-RO · NISAR (NASA/ISRO, ASF) · INPE' },
+      sa: { type: 'raster', tiles, tileSize: 256, minzoom: 5, maxzoom: 6, bounds: [-82, -35, -34, 13] },
+      ro: { type: 'raster', tiles, tileSize: 256, minzoom: 7, maxzoom: 8, bounds: [-67.5, -14.5, -59, -7] },
+      base: { type: 'geojson', data: dataUrl('basemap.json') },
+      lc: { type: 'image', url: dataUrl(data.landcover.image), coordinates: lc },
+      nocov: { type: 'image', url: dataUrl(data.landcover.nocoverage), coordinates: lc },
+      mun: { type: 'geojson', data: fc(data.municipios.map((m) => feat({ type: m.gtype, coordinates: m.geometry }, { id: m.id, nome: m.nome }))) },
+      munpt: { type: 'geojson', data: fc(data.municipios.map((m) => feat(pt(m.lon, m.lat), { id: m.id, nome: m.nome }))) },
+      prot: { type: 'geojson', data: fc(data.protegidas.map((p) => feat({ type: p.gtype, coordinates: p.geometry }, { nome: p.nome, tipo: p.tipo }))) },
+      fires: { type: 'geojson', data: fc([]) },
       farm: { type: 'geojson', data: fc([]) },
       forest: { type: 'geojson', data: fc([]) },
       forestpt: { type: 'geojson', data: fc([]) },
     },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#0b141b' } },
-      { id: 'countries', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'country'], paint: { 'line-color': '#5d7a84', 'line-width': 0.8 } },
-      { id: 'states', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'state'], paint: { 'line-color': '#5d7a84', 'line-width': 0.8, 'line-dasharray': [3, 2] } },
-      { id: 'lc', type: 'raster', source: 'lc', paint: { 'raster-opacity': 0.92, 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } },
-      { id: 'nocov', type: 'raster', source: 'nocov', paint: { 'raster-opacity': 0.9, 'raster-resampling': 'nearest', 'raster-fade-duration': 0 } },
-      { id: 'rivers', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'river'], paint: { 'line-color': '#5fb2e6', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.8, 10, 2.2] } },
-      { id: 'prot-fill', type: 'fill', source: 'prot', layout: { visibility: 'none' }, paint: { 'fill-color': ['case', ['==', ['get', 'tipo'], 'ti'], '#c79bff', '#7fd4ff'], 'fill-opacity': 0.12 } },
-      { id: 'prot-line', type: 'line', source: 'prot', layout: { visibility: 'none' }, paint: { 'line-color': ['case', ['==', ['get', 'tipo'], 'ti'], '#d9b8ff', '#9fe0ff'], 'line-width': 1.4, 'line-dasharray': [2, 1.5] } },
+      { id: 'bg', type: 'background', paint: { 'background-color': '#050b10' } },
+      { id: 'w', type: 'raster', source: 'w', paint: bm },
+      { id: 'sa', type: 'raster', source: 'sa', paint: bm },
+      { id: 'ro', type: 'raster', source: 'ro', paint: bm },
+      { id: 'countries', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'country'], paint: { 'line-color': '#9ab7c0', 'line-opacity': 0.35, 'line-width': 0.7 } },
+      { id: 'states', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'state'], minzoom: 3, paint: { 'line-color': '#9ab7c0', 'line-opacity': 0.3, 'line-width': 0.7 } },
+      { id: 'lc', type: 'raster', source: 'lc', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 4.5, 0, 6, 0.5, 9.5, 0.45, 11.5, 0.15], 'raster-resampling': 'linear', 'raster-fade-duration': 0, 'raster-opacity-transition': { duration: 500 } } },
+      { id: 'nocov', type: 'raster', source: 'nocov', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 5, 0.25, 10, 0.4], 'raster-resampling': 'linear', 'raster-opacity-transition': { duration: 500 } } },
+      { id: 'rivers', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'river'], paint: { 'line-color': '#6ec3f0', 'line-opacity': 0.7, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.7, 10, 2.4] } },
+      { id: 'ro-glow', type: 'line', source: 'base', filter: ['all', ['==', ['get', 'k'], 'state'], ['==', ['get', 'name'], 'Rondônia']], paint: { 'line-color': '#7fe3ff', 'line-width': 6, 'line-blur': 6, 'line-opacity': 0.35 } },
+      { id: 'ro-line', type: 'line', source: 'base', filter: ['all', ['==', ['get', 'k'], 'state'], ['==', ['get', 'name'], 'Rondônia']], paint: { 'line-color': '#c9f3ff', 'line-width': 1.2, 'line-opacity': 0.8 } },
+      { id: 'prot-fill', type: 'fill', source: 'prot', layout: { visibility: 'none' }, paint: { 'fill-color': ['case', ['==', ['get', 'tipo'], 'ti'], '#b48cff', '#5fd0ff'], 'fill-opacity': 0.12 } },
+      { id: 'prot-line', type: 'line', source: 'prot', layout: { visibility: 'none' }, paint: { 'line-color': ['case', ['==', ['get', 'tipo'], 'ti'], '#d4bbff', '#9fe3ff'], 'line-width': 1.2, 'line-dasharray': [2, 1.5] } },
       { id: 'mun-hit', type: 'fill', source: 'mun', paint: { 'fill-color': '#000', 'fill-opacity': 0 } },
-      { id: 'mun-line', type: 'line', source: 'mun', paint: { 'line-color': '#0b141b', 'line-opacity': 0.55, 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.5, 9, 1.4] } },
-      { id: 'mun-sel', type: 'line', source: 'mun', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#ffffff', 'line-width': 2.5 } },
-      { id: 'farm', type: 'fill', source: 'farm', paint: { 'fill-color': ['match', ['get', 's'], 'colheita', COLORS.colheita, 'plantio', COLORS.plantio, COLORS.misto], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 5, 0.75, 10, 0.55] } },
-      { id: 'forest-fill', type: 'fill', source: 'forest', paint: { 'fill-color': COLORS.floresta, 'fill-opacity': 0.9 } },
-      { id: 'forest-line', type: 'line', source: 'forest', paint: { 'line-color': '#fff3ea', 'line-width': ['case', ['get', 'sel'], 3, 0.8] } },
+      { id: 'mun-line', type: 'line', source: 'mun', minzoom: 5.5, paint: { 'line-color': '#e6f2f2', 'line-opacity': ['interpolate', ['linear'], ['zoom'], 5.5, 0, 7, 0.22], 'line-width': 0.7 } },
+      { id: 'mun-sel', type: 'line', source: 'mun', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#ffffff', 'line-width': 2.2, 'line-blur': 0.5 } },
+      // lavoura: brilho suave de longe, pontos de perto
       {
-        id: 'forest-pt', type: 'circle', source: 'forestpt', maxzoom: 10.5,
+        id: 'farm-heat', type: 'heatmap', source: 'farm', maxzoom: 11,
         paint: {
-          'circle-color': COLORS.floresta,
-          'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 4, ['*', 0.9, ['sqrt', ['get', 'ha']]]], 10, ['+', 7, ['*', 1.4, ['sqrt', ['get', 'ha']]]]],
-          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8, 0.95, 10.5, 0],
-          'circle-stroke-color': ['case', ['get', 'sel'], '#ffffff', ['==', ['get', 'c'], 'confirmado'], '#ffffff', '#3a1a10'],
-          'circle-stroke-width': ['case', ['get', 'sel'], 3.5, ['==', ['get', 'c'], 'confirmado'], 2, 1],
+          'heatmap-weight': ['interpolate', ['linear'], ['get', 'ha'], 0, 0, 120, 1],
+          'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 5, 0.08, 7, 0.2, 9, 0.5, 11, 1],
+          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 5, 2, 8, 7, 11, 22],
+          'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0.75, 11, 0],
+          'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.2, 'rgba(155,225,93,0.22)', 0.6, 'rgba(200,224,90,0.55)', 1, 'rgba(245,196,81,0.85)'],
         },
       },
       {
-        id: 'mun-label', type: 'symbol', source: 'munpt', minzoom: 6.2,
-        layout: { 'text-field': ['get', 'nome'], 'text-font': [FONT], 'text-size': ['interpolate', ['linear'], ['zoom'], 6, 10.5, 10, 14], 'text-max-width': 9, 'text-padding': 4 },
-        paint: { 'text-color': '#f4f7f5', 'text-halo-color': '#0b141b', 'text-halo-width': 1.6 },
+        id: 'farm-dot', type: 'circle', source: 'farm', minzoom: 9.5,
+        paint: { 'circle-color': ['match', ['get', 's'], 'colheita', COLORS.colheita, 'plantio', COLORS.plantio, '#d9d08a'], 'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 9.5, 5, 13, 40], 'circle-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.55], 'circle-blur': 0.35 },
+      },
+      // queimadas: calor de longe, focos de perto
+      {
+        id: 'fire-heat', type: 'heatmap', source: 'fires', maxzoom: 11,
+        paint: {
+          'heatmap-weight': 1,
+          'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.06, 6, 0.12, 8, 0.35, 10, 0.9],
+          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 2, 6, 5, 8, 9, 10, 16],
+          'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 9, 0.85, 11, 0],
+          'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.1, 'rgba(255,60,50,0.18)', 0.35, 'rgba(255,77,61,0.5)', 0.7, 'rgba(255,130,60,0.8)', 1, 'rgba(255,214,150,0.95)'],
+        },
       },
       {
-        id: 'prot-label', type: 'symbol', source: 'prot', minzoom: 8, layout: { visibility: 'none', 'text-field': ['get', 'nome'], 'text-font': [FONT], 'text-size': 11, 'symbol-placement': 'point', 'text-max-width': 10 },
-        paint: { 'text-color': '#e8d8ff', 'text-halo-color': '#0b141b', 'text-halo-width': 1.4 },
+        id: 'fire-dot', type: 'circle', source: 'fires', minzoom: 8.5,
+        paint: { 'circle-color': COLORS.fogo, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 8.5, 2, 13, 7], 'circle-stroke-color': 'rgba(255,224,200,0.7)', 'circle-stroke-width': 0.5, 'circle-opacity': ['interpolate', ['linear'], ['zoom'], 8.5, 0, 9.5, 0.95] },
       },
+      // floresta derrubada: halo + núcleo, contorno de perto
+      { id: 'forest-halo', type: 'circle', source: 'forestpt', maxzoom: 11.5, paint: { 'circle-color': COLORS.floresta, 'circle-blur': 1, 'circle-opacity': 0.45, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 8, ['sqrt', ['get', 'ha']]], 10, ['+', 18, ['*', 2, ['sqrt', ['get', 'ha']]]]] } },
+      {
+        id: 'forest-pt', type: 'circle', source: 'forestpt', maxzoom: 11.5,
+        paint: {
+          'circle-color': COLORS.floresta,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 3, ['*', 0.5, ['sqrt', ['get', 'ha']]]], 10, ['+', 6, ['sqrt', ['get', 'ha']]]],
+          'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['case', ['get', 'sel'], 3, ['==', ['get', 'c'], 'confirmado'], 1.8, 0.6],
+          'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
+          'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
+        },
+      },
+      { id: 'forest-fill', type: 'fill', source: 'forest', minzoom: 9.5, paint: { 'fill-color': COLORS.floresta, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.85] } },
+      { id: 'forest-line', type: 'line', source: 'forest', minzoom: 9.5, paint: { 'line-color': '#fff4e8', 'line-width': ['case', ['get', 'sel'], 3, 1], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
+      {
+        id: 'mun-label', type: 'symbol', source: 'munpt', minzoom: 6.3,
+        layout: { 'text-field': ['get', 'nome'], 'text-font': [FONT], 'text-size': ['interpolate', ['linear'], ['zoom'], 6.3, 10, 10, 14], 'text-max-width': 9, 'text-padding': 6 },
+        paint: { 'text-color': '#f2f7f6', 'text-halo-color': 'rgba(5,11,16,0.85)', 'text-halo-width': 1.5, 'text-opacity': ['interpolate', ['linear'], ['zoom'], 6.3, 0, 7, 0.95] },
+      },
+      { id: 'prot-label', type: 'symbol', source: 'prot', minzoom: 8, layout: { visibility: 'none', 'text-field': ['get', 'nome'], 'text-font': [FONT], 'text-size': 11, 'text-max-width': 10 }, paint: { 'text-color': '#e6dbff', 'text-halo-color': '#050b10', 'text-halo-width': 1.3 } },
     ],
   };
 }
@@ -112,30 +148,49 @@ export default function MapView(p: Props) {
   const [err, setErr] = useState<string | null>(null);
   const latest = useRef(p);
   latest.current = p;
+  const usedFocus = useRef(-1);
+  const farmIdx = useMemo(() => new Map(p.data.farm.map((r, i) => [r, i])), [p.data.farm]);
 
   useEffect(() => {
     if (!el.current) return;
     let map: MlMap;
     try {
-      map = new maplibregl.Map({ container: el.current, style: style(p.data), bounds: RO_BOUNDS, fitBoundsOptions: { padding: 24 }, minZoom: 4.5, maxZoom: 13, dragRotate: false, pitchWithRotate: false, attributionControl: false, renderWorldCopies: false });
+      map = new maplibregl.Map({
+        container: el.current, style: style(p.data), center: [-60, -15], zoom: 2.4, minZoom: 1.2, maxZoom: 13.5,
+        dragRotate: false, pitchWithRotate: false, attributionControl: false, fadeDuration: 250,
+      });
     } catch (e) {
       setErr(e instanceof Error ? e.message : 'WebGL indisponível');
       return;
     }
     map.touchZoomRotate.disableRotation();
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-    map.addControl(new maplibregl.ScaleControl({ unit: 'metric', maxWidth: 100 }), 'bottom-right');
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+    map.addControl(new maplibregl.ScaleControl({ unit: 'metric', maxWidth: 90 }), 'bottom-right');
     map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
-    map.on('load', () => { mapRef.current = map; setReady(true); });
+    map.on('load', () => {
+      mapRef.current = map;
+      setReady(true);
+      // abertura: do continente até Rondônia
+      const f = latest.current.focus;
+      usedFocus.current = f?.n ?? -1;
+      map.fitBounds(f?.bounds ?? RO_BOUNDS, { padding: pad(), maxZoom: f?.max ?? 11.5, duration: latest.current.reduce ? 0 : 3200, essential: true, curve: 1.6 });
+    });
+    map.on('moveend', () => {
+      const c = map.getCenter();
+      const [[x0, y0], [x1, y1]] = RO_BOUNDS;
+      latest.current.onMoveOut(map.getZoom() > 3.5 && (c.lng < x0 - 1.5 || c.lng > x1 + 1.5 || c.lat < y0 - 1.5 || c.lat > y1 + 1.5));
+    });
     map.on('click', (e) => {
-      const f = map.queryRenderedFeatures(e.point, { layers: ['forest-fill', 'forest-pt', 'farm', 'mun-hit'] });
+      const f = map.queryRenderedFeatures(e.point, { layers: ['forest-fill', 'forest-pt', 'fire-dot', 'farm-dot', 'mun-hit'] });
       const top = f[0];
       if (!top) return latest.current.onPick(null);
-      if (top.layer.id === 'forest-fill' || top.layer.id === 'forest-pt') return latest.current.onPick({ kind: 'floresta', id: String(top.properties!.id) });
-      if (top.layer.id === 'farm') return latest.current.onPick({ kind: 'lavoura', row: latest.current.farm[Number(top.properties!.i)] });
-      latest.current.onPick({ kind: 'municipio', id: String(top.properties!.id) });
+      const pr = top.properties!;
+      if (top.layer.id === 'forest-fill' || top.layer.id === 'forest-pt') return latest.current.onPick({ kind: 'floresta', id: String(pr.id) });
+      if (top.layer.id === 'fire-dot') { const g = top.geometry as unknown as { coordinates: [number, number] }; return latest.current.onPick({ kind: 'fogo', lon: g.coordinates[0], lat: g.coordinates[1], day: Number(pr.d), forest: Number(pr.f) === 1 }); }
+      if (top.layer.id === 'farm-dot') return latest.current.onPick({ kind: 'lavoura', row: latest.current.farm[Number(pr.i)] });
+      latest.current.onPick({ kind: 'municipio', id: String(pr.id) });
     });
-    for (const id of ['forest-fill', 'forest-pt', 'farm']) {
+    for (const id of ['forest-fill', 'forest-pt', 'fire-dot', 'farm-dot']) {
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     }
@@ -148,35 +203,37 @@ export default function MapView(p: Props) {
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
-    (map.getSource('forest') as GeoJSONSource).setData(fc(p.events.map((e) => feat(geom(e.gtype, e.geometry), { id: e.id, c: e.certeza, sel: e.id === p.selectedId }))));
-    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat({ type: 'Point', coordinates: [e.lon, e.lat] }, { id: e.id, c: e.certeza, ha: e.area_ha, sel: e.id === p.selectedId }))));
+    (map.getSource('forest') as GeoJSONSource).setData(fc(p.events.map((e) => feat({ type: e.gtype, coordinates: e.geometry }, { id: e.id, c: e.certeza, sel: e.id === p.selectedId }))));
+    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat(pt(e.lon, e.lat), { id: e.id, c: e.certeza, ha: e.area_ha, sel: e.id === p.selectedId }))));
   }, [ready, p.events, p.selectedId]);
-
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
-    (map.getSource('farm') as GeoJSONSource).setData(farmSquares(p.farm));
-  }, [ready, p.farm]);
-
+    (map.getSource('farm') as GeoJSONSource).setData(fc(p.farm.map((r) => feat(pt(r[0], r[1]), { i: farmIdx.get(r) ?? 0, s: r[5], ha: r[4] }))));
+  }, [ready, p.farm, farmIdx]);
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+    (map.getSource('fires') as GeoJSONSource).setData(fc(p.fires.map((r) => feat(pt(r[0], r[1]), { d: r[2], f: r[4] }))));
+  }, [ready, p.fires]);
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
     map.setFilter('mun-sel', ['==', ['get', 'id'], p.municipio ?? '']);
     for (const id of ['prot-fill', 'prot-line', 'prot-label']) map.setLayoutProperty(id, 'visibility', p.showProtegidas ? 'visible' : 'none');
-    map.setPaintProperty('lc', 'raster-opacity', p.showBase ? 0.92 : 0.18);
+    map.setLayoutProperty('lc', 'visibility', p.showTerreno ? 'visible' : 'none');
     map.setLayoutProperty('nocov', 'visibility', p.showNoCoverage ? 'visible' : 'none');
-  }, [ready, p.municipio, p.showProtegidas, p.showBase, p.showNoCoverage]);
-
+  }, [ready, p.municipio, p.showProtegidas, p.showTerreno, p.showNoCoverage]);
   useEffect(() => {
     const map = mapRef.current;
-    if (!ready || !map || !p.focus) return;
-    const still = document.documentElement.classList.contains('reduce-motion');
-    map.fitBounds(p.focus.bounds, { padding: 60, maxZoom: 12, duration: still ? 0 : 1400 });
-  }, [ready, p.focus]);
+    if (!ready || !map || !p.focus || p.focus.n === usedFocus.current) return;
+    usedFocus.current = p.focus.n;
+    map.fitBounds(p.focus.bounds, { padding: pad(), maxZoom: p.focus.max ?? 11.5, duration: p.reduce ? 0 : 2200, curve: 1.5, essential: true });
+  }, [ready, p.focus, p.reduce]);
 
   return (
-    <div className="map" ref={el} role="region" aria-label="Mapa de Rondônia com os acontecimentos vistos pelo radar NISAR">
-      {err && <p className="map-msg" role="alert">O mapa não pôde ser iniciado ({err}). A lista ao lado continua funcionando.</p>}
+    <div className="map" ref={el} role="region" aria-label="Mapa com queimadas, floresta derrubada e lavouras em Rondônia">
+      {err && <p className="map-msg" role="alert">O mapa não pôde ser iniciado ({err}). A lista e os números continuam funcionando.</p>}
     </div>
   );
 }
