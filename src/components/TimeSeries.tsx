@@ -28,11 +28,15 @@ interface Props {
   onRange: (r: [number, number]) => void;
   hours: [number, number];
   onHours: (h: [number, number]) => void;
+  open: boolean;
+  onOpen: (v: boolean) => void;
+  /** Evento selecionado no mapa: marca a data na linha do tempo. */
+  mark?: { day: number; label: string; color: string } | null;
 }
 
 /** Linha do tempo: ano, datas (dia a dia), horário das queimadas e o que comparar.
  *  Cada linha usa a própria escala (0 a 100% do seu maior valor), por volta de 12 dias do NISAR. */
-export default function TimeSeries({ periods, series, totals, compare, onCompare, range, onRange, hours, onHours }: Props) {
+export default function TimeSeries({ periods, series, totals, compare, onCompare, range, onRange, hours, onHours, open, onOpen, mark }: Props) {
   const n = periods.length;
   const D = n * 12;
   const box = useRef<HTMLDivElement>(null);
@@ -47,7 +51,7 @@ export default function TimeSeries({ periods, series, totals, compare, onCompare
     const ro = new ResizeObserver((e) => setW(Math.max(300, e[0].contentRect.width)));
     ro.observe(box.current);
     return () => ro.disconnect();
-  }, []);
+  }, [open]);
 
   const H = 76, PX = 6, top = 8, bot = 18;
   const dx = (w - 2 * PX) / D;
@@ -79,6 +83,19 @@ export default function TimeSeries({ periods, series, totals, compare, onCompare
   const hp = HOURS.find((x) => x.h[0] === hours[0] && x.h[1] === hours[1])?.k ?? 'dia';
   const hoverPeriod = hover === null ? null : Math.min(n - 1, Math.floor(hover / 12));
 
+  const summary = `${fmtDate(dateOf(range[0]), false)} a ${fmtDate(dateOf(range[1]))}`;
+  if (!open) {
+    return (
+      <section className="ts ts-closed glass" aria-label="Linha do tempo (fechada)">
+        <button type="button" className="ts-toggle" aria-expanded={false} onClick={() => onOpen(true)}>
+          <b>Linha do tempo</b><span>{summary}{hp !== 'dia' ? ` · ${HOURS.find((x) => x.k === hp)!.label.toLowerCase()}` : ''}</span>
+          <span className="ts-mini">{compare.map((l) => <em key={l} style={{ ['--c' as string]: META[l].color }}><i />{META[l].unit(totals[l])}</em>)}</span>
+          <span className="ts-caret">Abrir ▴</span>
+        </button>
+      </section>
+    );
+  }
+
   return (
     <section className="ts glass" aria-label="Linha do tempo">
       <div className="ts-bar">
@@ -86,7 +103,7 @@ export default function TimeSeries({ periods, series, totals, compare, onCompare
         <label className="fld" htmlFor="ts-ano">Ano
           <select id="ts-ano" value={year} onChange={() => undefined}>
             <option value={year}>{year}</option>
-            <option value="2025" disabled>2025 (ainda não processado)</option>
+            <option value="2025" disabled>2025 (sem dados)</option>
           </select>
         </label>
         <label className="fld" htmlFor="ts-de">De
@@ -101,6 +118,7 @@ export default function TimeSeries({ periods, series, totals, compare, onCompare
           </select>
         </label>
         {(!all || hp !== 'dia') && <button type="button" className="link" onClick={() => { onRange([0, D - 1]); onHours([0, 24]); }}>limpar filtros</button>}
+        <button type="button" className="ts-close" aria-expanded={true} onClick={() => onOpen(false)}>Fechar ▾</button>
       </div>
 
       <div className="ts-cmp" role="group" aria-label="O que comparar">
@@ -142,6 +160,13 @@ export default function TimeSeries({ periods, series, totals, compare, onCompare
               </g>
             );
           })}
+          {mark && mark.day >= 0 && mark.day < D && (
+            <g className="ts-mark" style={{ ['--c' as string]: mark.color }}>
+              <line x1={xd(mark.day) + dx / 2} x2={xd(mark.day) + dx / 2} y1={2} y2={H - bot} />
+              <circle cx={xd(mark.day) + dx / 2} cy={6} r={4} />
+              <text x={Math.min(w - 4, Math.max(4, xd(mark.day) + dx / 2 + 7))} y={10} textAnchor={xd(mark.day) > w - 160 ? 'end' : 'start'}>{mark.label}</text>
+            </g>
+          )}
           {hover !== null && <line x1={xd(hover) + dx / 2} x2={xd(hover) + dx / 2} y1={4} y2={H - bot} className="ts-cursor" />}
           {months.map((m) => <text key={m.d} x={xd(m.d) + 4} y={H - 4} className="ts-tick">{m.t}</text>)}
         </svg>

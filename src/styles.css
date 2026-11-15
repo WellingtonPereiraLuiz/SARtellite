@@ -429,3 +429,31 @@ th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
 }
 .ts { grid-template-columns: minmax(0, 1fr); }
 .fld { min-width: 0; }
+
+/* ---------- linha do tempo: abrir e fechar ---------- */
+.mapage { --tsh: 236px; }
+.mapage.ts-off { --tsh: 72px; }
+.mapage .panel { max-height: calc(100% - 72px - var(--tsh)); }
+.mapage .drawer { max-height: calc(100% - 72px - var(--tsh) - 4px); }
+.mapage .legend { bottom: calc(var(--tsh) + 8px); }
+.mapage .maplibregl-ctrl-bottom-right { bottom: var(--tsh) !important; }
+.ts-closed { padding: 0; }
+.ts-toggle { width: 100%; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: none; border: 0; padding: 12px 16px; cursor: pointer; text-align: left; }
+.ts-toggle b { font-family: var(--display); font-stretch: 110%; font-size: 15px; }
+.ts-toggle > span { color: var(--muted); font-size: 13px; }
+.ts-mini { display: inline-flex; gap: 12px; }
+.ts-mini em { font-style: normal; color: var(--text); display: inline-flex; align-items: center; gap: 6px; }
+.ts-mini i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.ts-caret { margin-left: auto; color: var(--accent) !important; }
+.ts-close { margin-left: auto; background: none; border: 1px solid var(--edge); border-radius: 999px; padding: 5px 12px; color: var(--muted); cursor: pointer; font-size: 12.5px; align-self: center; }
+.ts-close:hover { color: var(--text); border-color: var(--accent); }
+.ts-mark line { stroke: var(--c); stroke-width: 2; }
+.ts-mark circle { fill: var(--c); }
+.ts-mark text { fill: var(--text); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: rgba(5, 11, 16, 0.85); stroke-width: 3px; }
+@media (max-width: 760px) {
+  .mapage { --tsh: 300px; }
+  .mapage.ts-off { --tsh: 64px; }
+  .mapage .drawer { max-height: calc(100% - 140px - var(--tsh)); bottom: calc(var(--tsh) + 8px); }
+  .ts-close { grid-column: 1 / -1; justify-self: end; }
+  .ts-mini { display: none; }
+}

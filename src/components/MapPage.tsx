@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
-import { CERTEZA, filterEvents, filterFires, haTxt, rainSum, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData, type Serie3 } from '../lib/ro';
+import { CERTEZA, dateOf, dayOf, filterEvents, filterFires, haTxt, rainSum, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData, type Serie3 } from '../lib/ro';
 import { FireDetail, ForestDetail, MunDetail } from './Detail';
 import MapView, { COLORS, RO_BOUNDS, type Pick } from './MapView';
 import TimeSeries from './TimeSeries';
@@ -30,6 +30,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   const [terreno, setTerreno] = useState(true);
   const [compare, setCompare] = useState<Serie3[]>(['floresta', 'chuva']);
   const [listOpen, setListOpen] = useState(true);
+  const [tsOpen, setTsOpen] = useState(() => window.innerWidth >= 760);
 
   const events = useMemo(() => filterEvents(data.events, filters), [data, filters]);
   const fires = useMemo(() => filterFires(data.fires, data.fireMun, filters), [data, filters]);
@@ -61,6 +62,8 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
     setPick({ kind: 'floresta', id });
     go([[e.lon - 0.12, e.lat - 0.12], [e.lon + 0.12, e.lat + 0.12]], 12);
   };
+  // ao clicar num evento, a linha do tempo abre junto com o cartão
+  useEffect(() => { if (pick && pick.kind !== 'municipio') setTsOpen(true); }, [pick]);
   const selected = pick?.kind === 'floresta' ? data.events.find((e) => e.id === pick.id) : undefined;
   const rank = { confirmado: 0, provavel: 1, possivel: 2 } as const;
   const top = [...events].sort((a, b) => rank[a.certeza] - rank[b.certeza] || b.area_ha - a.area_ha).slice(0, 6);
@@ -72,7 +75,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   ];
 
   return (
-    <div className="mapage">
+    <div className={`mapage${tsOpen ? '' : ' ts-off'}`}>
       <MapView
         data={data} events={events} fires={fires} selectedId={selected?.id ?? null} municipio={filters.municipio}
         showProtegidas={showProt} showTerreno={terreno} showNoCoverage={filters.layers.floresta && terreno} reduce={reduce} focus={focus}
@@ -169,7 +172,9 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
         {filters.layers.floresta && terreno && <span><i className="hatch" />sem dado de floresta</span>}
       </div>
 
-      <TimeSeries periods={data.periods} series={series} totals={{ fogo: t.focos, floresta: t.florestaHa, chuva: rainSum(data.rain, filters.range) }} compare={compare} onCompare={setCompare} range={filters.range} onRange={(r) => setFilters((f) => ({ ...f, range: r }))} hours={filters.hours} onHours={(h) => setFilters((f) => ({ ...f, hours: h }))} />
+      <TimeSeries periods={data.periods} series={series} totals={{ fogo: t.focos, floresta: t.florestaHa, chuva: rainSum(data.rain, filters.range) }} compare={compare} onCompare={setCompare} range={filters.range} onRange={(r) => setFilters((f) => ({ ...f, range: r }))} hours={filters.hours} onHours={(h) => setFilters((f) => ({ ...f, hours: h }))} open={tsOpen} onOpen={setTsOpen}
+        mark={selected ? { day: dayOf(selected.date), label: `${fmtNum(selected.area_ha)} ha · ${fmtDate(selected.date, false)}`, color: COLORS.floresta }
+          : pick?.kind === 'fogo' ? { day: pick.day, label: `foco · ${fmtDate(dateOf(pick.day), false)}`, color: COLORS.fogo } : null} />
     </div>
   );
 }
