@@ -79,10 +79,10 @@ export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => vo
   );
 }
 
-export function FireDetail({ day, forest, start, onClose }: { day: number; forest: boolean; start: string; onClose: () => void }) {
+export function FireDetail({ day, hour, forest, start, onClose }: { day: number; hour?: number; forest: boolean; start: string; onClose: () => void }) {
   const d = new Date(Date.parse(`${start}T00:00:00Z`) + day * 86400000).toISOString().slice(0, 10);
   return (
-    <Shell tag="Queimada" color={COLORS.fogo} title={`Foco de calor em ${fmtDate(d)}`} onClose={onClose}>
+    <Shell tag="Queimada" color={COLORS.fogo} title={`Foco de calor em ${fmtDate(d)}${hour !== undefined ? `, por volta das ${hour}h` : ''}`} onClose={onClose}>
       <ul className="facts">
         <li><span>Terreno</span>{forest ? 'dentro de floresta' : 'área aberta (pasto, lavoura ou capoeira)'}</li>
         <li><span>Satélite</span>VIIRS ou MODIS (NASA/NOAA), via INPE</li>

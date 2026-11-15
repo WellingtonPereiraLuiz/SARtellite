@@ -20,12 +20,12 @@ export default function App() {
   const [fatal, setFatal] = useState<string | null>(null);
   const [view, setView] = useState<View>(viewFromHash);
   const [mapSeen, setMapSeen] = useState(view === 'mapa');
-  const [filters, setFilters] = useState<Filters>({ range: [0, 0], municipio: null, layers: ALL, fracos: false, soProtegidas: false, duvidas: true });
+  const [filters, setFilters] = useState<Filters>({ range: [0, 0], hours: [0, 24], municipio: null, layers: ALL, fracos: false, soProtegidas: false, duvidas: true });
   const [jump, setJump] = useState<{ id: string | null; n: number }>({ id: null, n: 0 });
   const [reduce, setReduce] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
 
   useEffect(() => {
-    loadRo().then((d) => { setData(d); setFilters((f) => ({ ...f, range: [0, d.periods.length - 1] })); }).catch((e) => setFatal(e instanceof Error ? e.message : String(e)));
+    loadRo().then((d) => { setData(d); setFilters((f) => ({ ...f, range: [0, d.periods.length * 12 - 1] })); }).catch((e) => setFatal(e instanceof Error ? e.message : String(e)));
   }, []);
   useEffect(() => {
     const on = () => setView(viewFromHash());

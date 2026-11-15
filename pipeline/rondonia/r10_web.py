@@ -6,6 +6,7 @@
 - tiles/bm        NASA Blue Marble: mundo (z0-4), América do Sul (z5-6), Rondônia (z7-8)
 - hero.webp       retrato de Rondônia com focos, lavoura e floresta (imagem da Home)
 """
+import datetime as dt
 import math
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
@@ -50,14 +51,15 @@ def fires():
     last = len(read_json(O / "periods.json")["periods"]) * 12  # só os dias cobertos pelos períodos do NISAR
     rows = []
     for lo, la, t, sat, frp, mun in read_json(CACHE / "fires_ro.json")["rows"]:
-        d = (date.fromisoformat(t[:10]) - T0).days
+        loc = dt.datetime.fromisoformat(t.replace("Z", "+00:00")) - dt.timedelta(hours=4)  # hora de Rondônia (UTC-4)
+        d = (loc.date() - T0).days
         if d < 0 or d >= last:
             continue
         c, r = inv * to_utm(lo, la)
         r, c = int(r), int(c)
         forest = int(0 <= r < lulc.shape[0] and 0 <= c < lulc.shape[1] and lulc[r, c] == 2)
-        rows.append([round(lo, 3), round(la, 3), d, by_name.get(norm(mun), -1), forest])
-    write_json({"start": NISAR_START, "columns": ["lon", "lat", "dia", "mun", "floresta"], "mun_ids": [m["id"] for m in places],
+        rows.append([round(lo, 3), round(la, 3), d, by_name.get(norm(mun), -1), forest, loc.hour])
+    write_json({"start": NISAR_START, "columns": ["lon", "lat", "dia", "mun", "floresta", "hora_local"], "mun_ids": [m["id"] for m in places],
                 "rows": rows}, O / "fires.json", compact=True)
     m = read_json(O / "meta.json")
     m["fogo"]["focos"] = len(rows)

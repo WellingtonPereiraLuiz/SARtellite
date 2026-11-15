@@ -1,4 +1,4 @@
-import { fmtDate, fmtNum } from './time';
+import { daysBetween, fmtDate, fmtNum } from './time';
 
 export type Certeza = 'confirmado' | 'provavel' | 'possivel';
 /** Camadas do mapa. */
@@ -23,8 +23,8 @@ export interface ForestEvent {
   passagens_confirmaram: number; quadros: number; inpe: { classe: string; data: string }[]; fogo_dias: string[];
   serie: Serie | null; geometry: unknown; gtype: string; chuva?: Chuva;
 }
-/** Foco de calor: [lon, lat, dia desde o início do NISAR, índice do município, 1 se caiu em floresta] */
-export type FireRow = [number, number, number, number, number];
+/** Foco de calor: [lon, lat, dia desde o início do NISAR, índice do município, 1 se caiu em floresta, hora local de RO] */
+export type FireRow = [number, number, number, number, number, number?];
 
 export interface Municipio { id: string; nome: string; lon: number; lat: number; floresta_ha: number; geometry: unknown; gtype: string }
 export interface Protegida { nome: string; tipo: 'ti' | 'uc'; geometry: unknown; gtype: string }
@@ -70,19 +70,26 @@ export async function loadRo(): Promise<RoData> {
 
 // ---------------------------------------------------------------- filtros
 
-export interface Filters { range: [number, number]; municipio: string | null; layers: Record<Layer, boolean>; fracos: boolean; soProtegidas: boolean; duvidas: boolean }
+/** Primeiro dia dos períodos do NISAR em Rondônia; os filtros contam dias a partir dele. */
+export const START = '2026-06-17';
+export const dayOf = (iso: string) => daysBetween(START, iso);
+export const dateOf = (day: number) => new Date(Date.parse(`${START}T00:00:00Z`) + day * 86400000).toISOString().slice(0, 10);
+
+/** range: dias desde START (inclusivo). hours: horário local de RO [início, fim), só para queimadas. */
+export interface Filters { range: [number, number]; hours: [number, number]; municipio: string | null; layers: Record<Layer, boolean>; fracos: boolean; soProtegidas: boolean; duvidas: boolean }
 
 export const periodOfDay = (day: number) => Math.floor(day / 12);
 export const inRange = (p: number, r: [number, number]) => p >= r[0] && p <= r[1];
 
 export function filterEvents(ev: ForestEvent[], f: Filters, ignoreLayer = false): ForestEvent[] {
   if (!f.layers.floresta && !ignoreLayer) return [];
-  return ev.filter((e) => inRange(e.period, f.range) && (!f.municipio || e.cd_mun === f.municipio) && (f.fracos || e.certeza !== 'possivel') && (!f.soProtegidas || e.protegida.length > 0) && (f.duvidas || e.chuva?.veredito !== 'duvida'));
+  return ev.filter((e) => inRange(dayOf(e.date), f.range) && (!f.municipio || e.cd_mun === f.municipio) && (f.fracos || e.certeza !== 'possivel') && (!f.soProtegidas || e.protegida.length > 0) && (f.duvidas || e.chuva?.veredito !== 'duvida'));
 }
 export function filterFires(rows: FireRow[], munIds: string[], f: Filters, ignoreLayer = false): FireRow[] {
   if ((!f.layers.fogo && !ignoreLayer) || f.soProtegidas) return [];
   const mi = f.municipio ? munIds.indexOf(f.municipio) : -2;
-  return rows.filter((r) => inRange(periodOfDay(r[2]), f.range) && (mi === -2 || r[3] === mi));
+  const allDay = f.hours[0] === 0 && f.hours[1] === 24;
+  return rows.filter((r) => inRange(r[2], f.range) && (mi === -2 || r[3] === mi) && (allDay || r[5] === undefined || (r[5] >= f.hours[0] && r[5] < f.hours[1])));
 }
 
 export interface Totals { focos: number; focosFloresta: number; florestaHa: number; florestaN: number; confirmados: number; semChuva: number; duvida: number; comChuva: number }
@@ -100,8 +107,14 @@ export function totals(ev: ForestEvent[], fires: FireRow[]): Totals {
 }
 
 /** Uma série por camada, um valor por período de 12 dias (ignora o filtro de período). */
+/** Chuva média de RO somada no intervalo de dias (mm). */
+export function rainSum(rain: Rain | null, range: [number, number]): number {
+  if (!rain) return 0;
+  return rain.daily.reduce((a, [d, v]) => (inRange(dayOf(d), range) ? a + v : a), 0);
+}
+
 export function seriesByPeriod(d: RoData, f: Filters): Record<Serie3, number[]> {
-  const all = { ...f, range: [0, d.periods.length - 1] as [number, number] };
+  const all = { ...f, range: [0, d.periods.length * 12 - 1] as [number, number] };
   const n = d.periods.length;
   const out: Record<Serie3, number[]> = { fogo: Array(n).fill(0), floresta: Array(n).fill(0), chuva: Array(n).fill(0) };
   for (const r of filterFires(d.fires, d.fireMun, all, true)) { const p = periodOfDay(r[2]); if (p < n) out.fogo[p]++; }

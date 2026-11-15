@@ -8,7 +8,7 @@ const periods = (JSON.parse(readFileSync('public/data/ro/periods.json', 'utf8'))
 const fireJson = JSON.parse(readFileSync('public/data/ro/fires.json', 'utf8')) as { rows: FireRow[]; mun_ids: string[] };
 const places = JSON.parse(readFileSync('public/data/ro/gazetteer.json', 'utf8')) as Place[];
 const layers = { fogo: true, floresta: true };
-const all: Filters = { range: [0, periods.length - 1], municipio: null, layers, fracos: false, soProtegidas: false, duvidas: true };
+const all: Filters = { range: [0, periods.length * 12 - 1], hours: [0, 24], municipio: null, layers, fracos: false, soProtegidas: false, duvidas: true };
 
 describe('períodos do NISAR', () => {
   it('começam em 17 jun 2026 e têm 12 dias cada', () => {
@@ -32,7 +32,8 @@ describe('filtros', () => {
     for (const e of filterEvents(events, { ...all, soProtegidas: true })) expect(e.certeza).toBe('confirmado');
   });
   it('período e município restringem', () => {
-    const r = filterEvents(events, { ...all, range: [5, 5] });
+    const r = filterEvents(events, { ...all, fracos: true, range: [60, 71] });
+    expect(r.length).toBeGreaterThan(0);
     expect(r.every((e) => e.period === 5)).toBe(true);
     const mun = events.find((e) => e.cd_mun)!.cd_mun;
     expect(filterEvents(events, { ...all, municipio: mun, fracos: true }).every((x) => x.cd_mun === mun)).toBe(true);
@@ -87,6 +88,18 @@ describe('queimadas', () => {
     const r = filterFires(fireJson.rows, fireJson.mun_ids, { ...all, municipio: id });
     expect(r.length).toBeGreaterThan(0);
     expect(r.every((x) => x[3] === 0)).toBe(true);
+  });
+});
+
+describe('filtro de dia e hora', () => {
+  it('horário só deixa focos daquela faixa', () => {
+    const r = filterFires(fireJson.rows, fireJson.mun_ids, { ...all, hours: [12, 18] });
+    expect(r.length).toBeGreaterThan(0);
+    expect(r.every((x) => (x[5] as number) >= 12 && (x[5] as number) < 18)).toBe(true);
+  });
+  it('um dia só traz focos daquele dia', () => {
+    const r = filterFires(fireJson.rows, fireJson.mun_ids, { ...all, range: [70, 70] });
+    expect(r.every((x) => x[2] === 70)).toBe(true);
   });
 });
 

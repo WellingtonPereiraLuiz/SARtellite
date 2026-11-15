@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
-import { CERTEZA, filterEvents, filterFires, haTxt, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData, type Serie3 } from '../lib/ro';
+import { CERTEZA, filterEvents, filterFires, haTxt, rainSum, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData, type Serie3 } from '../lib/ro';
 import { FireDetail, ForestDetail, MunDetail } from './Detail';
 import MapView, { COLORS, RO_BOUNDS, type Pick } from './MapView';
 import TimeSeries from './TimeSeries';
@@ -146,7 +146,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
       {pick && (
         <div className="drawer">
           {pick.kind === 'floresta' && selected && <ForestDetail e={selected} onClose={() => setPick(null)} />}
-          {pick.kind === 'fogo' && <FireDetail day={pick.day} forest={pick.forest} start={data.periods[0].start} onClose={() => setPick(null)} />}
+          {pick.kind === 'fogo' && <FireDetail day={pick.day} hour={pick.hour} forest={pick.forest} start={data.periods[0].start} onClose={() => setPick(null)} />}
           {pick.kind === 'municipio' && (() => { const m = data.municipios.find((x) => x.id === pick.id); return m ? <MunDetail m={m} focos={munFocos(m.id)} filtered={filters.municipio === m.id} onFilter={() => { setMun(filters.municipio === m.id ? null : m.id); setPick(null); }} onClose={() => setPick(null)} /> : null; })()}
         </div>
       )}
@@ -169,7 +169,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
         {filters.layers.floresta && terreno && <span><i className="hatch" />sem dado de floresta</span>}
       </div>
 
-      <TimeSeries periods={data.periods} series={series} compare={compare} onCompare={setCompare} range={filters.range} onRange={(r) => setFilters((f) => ({ ...f, range: r }))} reduce={reduce} />
+      <TimeSeries periods={data.periods} series={series} totals={{ fogo: t.focos, floresta: t.florestaHa, chuva: rainSum(data.rain, filters.range) }} compare={compare} onCompare={setCompare} range={filters.range} onRange={(r) => setFilters((f) => ({ ...f, range: r }))} hours={filters.hours} onHours={(h) => setFilters((f) => ({ ...f, hours: h }))} />
     </div>
   );
 }

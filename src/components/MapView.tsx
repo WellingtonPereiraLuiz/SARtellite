@@ -6,7 +6,7 @@ import { dataUrl, type FireRow, type ForestEvent, type RoData } from '../lib/ro'
 
 export type Pick =
   | { kind: 'floresta'; id: string }
-  | { kind: 'fogo'; lon: number; lat: number; day: number; forest: boolean }
+  | { kind: 'fogo'; lon: number; lat: number; day: number; hour?: number; forest: boolean }
   | { kind: 'municipio'; id: string }
   | null;
 
@@ -167,7 +167,7 @@ export default function MapView(p: Props) {
       if (!top) return latest.current.onPick(null);
       const pr = top.properties!;
       if (top.layer.id === 'forest-fill' || top.layer.id === 'forest-pt') return latest.current.onPick({ kind: 'floresta', id: String(pr.id) });
-      if (top.layer.id === 'fire-dot') { const g = top.geometry as unknown as { coordinates: [number, number] }; return latest.current.onPick({ kind: 'fogo', lon: g.coordinates[0], lat: g.coordinates[1], day: Number(pr.d), forest: Number(pr.f) === 1 }); }
+      if (top.layer.id === 'fire-dot') { const g = top.geometry as unknown as { coordinates: [number, number] }; return latest.current.onPick({ kind: 'fogo', lon: g.coordinates[0], lat: g.coordinates[1], day: Number(pr.d), hour: Number(pr.h) >= 0 ? Number(pr.h) : undefined, forest: Number(pr.f) === 1 }); }
       latest.current.onPick({ kind: 'municipio', id: String(pr.id) });
     });
     for (const id of ['forest-fill', 'forest-pt', 'fire-dot']) {
@@ -189,7 +189,7 @@ export default function MapView(p: Props) {
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
-    (map.getSource('fires') as GeoJSONSource).setData(fc(p.fires.map((r) => feat(pt(r[0], r[1]), { d: r[2], f: r[4] }))));
+    (map.getSource('fires') as GeoJSONSource).setData(fc(p.fires.map((r) => feat(pt(r[0], r[1]), { d: r[2], f: r[4], h: r[5] ?? -1 }))));
   }, [ready, p.fires]);
   useEffect(() => {
     const map = mapRef.current;
