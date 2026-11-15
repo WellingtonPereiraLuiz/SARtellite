@@ -49,7 +49,7 @@ export function Fontes({ data }: { data: RoData }) {
       [<><A href="https://firms.modaps.eosdis.nasa.gov/">NASA FIRMS</A> (VIIRS S-NPP, NOAA-20, NOAA-21 e MODIS)</>, 'Queimadas', `${fmtNum(m.fogo.focos)} focos de calor em Rondônia. ${m.fogo.fonte}`],
     ] },
     { t: 'Imagem e contexto', d: 'O que aparece no fundo do mapa e nas conferências.', rows: [
-      ...(s2 ? [[<><A href="https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a">Sentinel-2 L2A</A> (ESA/Copernicus)</>, 'Foto real do mapa e de cada lugar', `mosaico de Rondônia a ${s2.res_m} m com ${s2.cenas} cenas (${s2.periodo}) e recortes de 10 m em volta de cada lugar`] as Row] : []),
+      ...(s2 ? [[<><A href="https://planetarycomputer.microsoft.com/dataset/sentinel-2-l2a">Sentinel-2 L2A</A> (ESA/Copernicus)</>, 'Foto real do mapa e de cada lugar', `mosaico de Rondônia a ${s2.res_m} m com ${s2.cenas} cenas (${s2.periodo.replace(/\d{4}-\d{2}-\d{2}/, (d) => fmtDate(d))}) e recortes de 10 m em volta de cada lugar`] as Row] : []),
       [<><A href="https://terrabrasilis.dpi.inpe.br/">INPE DETER</A> (TerraBrasilis)</>, 'Conferir a floresta: selo "O INPE também viu"', `${fmtNum(m.deter.poligonos)} alertas desde junho. Não entra na detecção`],
       [<A href="https://geoportal.sedam.ro.gov.br/">GeoPortal SEDAM-RO</A>, 'Municípios, Terras Indígenas e UCs', 'camadas públicas (IBGE, FUNAI, ICMBio, SEDAM)'],
       [<><A href="https://planetarycomputer.microsoft.com/dataset/io-lulc-annual-v02">Cobertura do solo 10 m</A> (Impact Observatory, Esri)</>, 'Onde é floresta', `mapa anual de ${data.landcover.year}`],

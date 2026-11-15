@@ -22,7 +22,7 @@ const PASSOS = [
 ] as const;
 
 function Chart({ dates, here, around, cursor, marks }: { dates: string[]; here: (number | null)[]; around: (number | null)[]; cursor: number; marks?: { d: string; c: string; t: string }[] }) {
-  const W = 560, H = 200, L = 34, R = 10, T = 14, B = 26;
+  const W = 560, H = 200, L = 46, R = 22, T = 18, B = 28;
   const vals = [...here, ...around].filter((v): v is number => v !== null);
   const lo = Math.min(...vals) - 4, hi = Math.max(...vals) + 4;
   const t0 = Date.parse(dates[0]), t1 = Date.parse(dates[dates.length - 1]);
@@ -112,7 +112,7 @@ export default function ComoFunciona({ data, onMap }: { data: RoData; onMap: (id
             </figure>
             <div className="cf-text">
               <h2>{haTxt(e.area_ha)} em {e.municipio}</h2>
-              <p>Do tamanho de <b>{fmtNum(campos(e.area_ha))} campos de futebol</b>. O contorno laranja é onde o radar viu a floresta sumir.</p>
+              <p>Do tamanho de <b>{fmtNum(campos(e.area_ha))} campos de futebol</b>. O contorno rosa é onde o radar viu a floresta sumir.</p>
               <p className="fine">Esta foto é de um satélite comum (óptico). Ele só funciona quando não há nuvem nem fumaça. Na seca de Rondônia, isso é raro. Por isso o resto do caminho é feito com radar.</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export default function ComoFunciona({ data, onMap }: { data: RoData; onMap: (id
             <Chart dates={s1.serie.map((p) => p[0])} here={s1.serie.map((p) => p[1])} around={s1.serie.map(() => null)} cursor={s1.serie.length - 1}
               marks={[...(s1.alerta ? [{ d: s1.alerta, c: COLORS.s1, t: 'Sentinel-1' }] : []), { d: s1.queda_nisar, c: COLORS.floresta, t: 'NISAR' }]} />
             <div className="cf-text">
-              <h2>{s1.alerta ? ((s1.dias_antes ?? 0) > 0 ? `O Sentinel-1 avisou ${s1.dias_antes} dias antes` : 'O Sentinel-1 também viu') : 'Só o NISAR viu'}</h2>
+              <h2>{s1.alerta ? ((s1.dias_antes ?? 0) > 0 ? `O Sentinel-1 avisou ${s1.dias_antes} dias antes` : 'O Sentinel‑1 também viu') : 'Só o NISAR viu'}</h2>
               <p>O <b>Sentinel-1</b> é outro radar (europeu), de onda mais curta: enxerga a <b>copa</b>. O NISAR, de onda longa, chega aos <b>troncos</b>.</p>
               <p>{s1.alerta ? 'A linha roxa é o eco do Sentinel-1 aqui comparado com a floresta em volta. Quando ela cai e fica baixa, a copa sumiu.' : 'A copa não mudou o bastante para o Sentinel-1; a mudança pode estar debaixo dela.'}</p>
               <p className="fine">Passando em dias diferentes, os dois juntos dão uma imagem a cada {fmtNum(s1.revisita_juntos_dias ?? 7, 1)} dias aqui.</p>
