@@ -10,7 +10,7 @@ export type Pick =
   | { kind: 'municipio'; id: string }
   | null;
 
-export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', chuva: '#5FB8FF' };
+export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', chuva: '#5FB8FF', s1: '#C9A6FF' };
 export const RO_BOUNDS: [[number, number], [number, number]] = [[-66.85, -13.75], [-59.75, -7.95]];
 
 interface Props {
@@ -102,6 +102,14 @@ function style(data: RoData): StyleSpecification {
       // floresta derrubada: halo + núcleo, contorno de perto
       { id: 'forest-halo', type: 'circle', source: 'forestpt', maxzoom: 11.5, paint: { 'circle-color': COLORS.floresta, 'circle-blur': 1, 'circle-opacity': 0.45, 'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 8, ['sqrt', ['get', 'ha']]], 10, ['+', 18, ['*', 2, ['sqrt', ['get', 'ha']]]]] } },
       {
+        id: 'forest-s1', type: 'circle', source: 'forestpt', maxzoom: 11.5, filter: ['==', ['get', 'a'], 1],
+        paint: {
+          'circle-color': 'rgba(0,0,0,0)', 'circle-stroke-color': COLORS.s1, 'circle-stroke-width': 2,
+          'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 7, ['*', 0.5, ['sqrt', ['get', 'ha']]]], 10, ['+', 11, ['sqrt', ['get', 'ha']]]],
+          'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 0.9, 11.5, 0],
+        },
+      },
+      {
         id: 'forest-pt', type: 'circle', source: 'forestpt', maxzoom: 11.5,
         paint: {
           'circle-color': COLORS.floresta,
@@ -184,7 +192,7 @@ export default function MapView(p: Props) {
     const map = mapRef.current;
     if (!ready || !map) return;
     (map.getSource('forest') as GeoJSONSource).setData(fc(p.events.map((e) => feat({ type: e.gtype, coordinates: e.geometry }, { id: e.id, c: e.certeza, v: e.chuva?.veredito ?? '', sel: e.id === p.selectedId }))));
-    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat(pt(e.lon, e.lat), { id: e.id, c: e.certeza, v: e.chuva?.veredito ?? '', ha: e.area_ha, sel: e.id === p.selectedId }))));
+    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat(pt(e.lon, e.lat), { id: e.id, c: e.certeza, v: e.chuva?.veredito ?? '', a: e.s1?.alerta ? 1 : 0, ha: e.area_ha, sel: e.id === p.selectedId }))));
   }, [ready, p.events, p.selectedId]);
   useEffect(() => {
     const map = mapRef.current;

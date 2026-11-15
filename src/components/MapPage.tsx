@@ -155,7 +155,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
                 {top.map((e) => (
                   <li key={e.id}>
                     <button type="button" className={selected?.id === e.id ? 'on' : ''} onClick={() => openEvent(e.id)}>
-                      <b>{fmtNum(e.area_ha)} ha</b><span>{e.municipio}</span><small className={`c-${e.certeza}`}>{CERTEZA[e.certeza].label} · {fmtDate(e.date, false)}{e.chuva && <em className={`vb v-${e.chuva.veredito}`}> · {e.chuva.veredito === 'duvida' ? 'pode ser chuva' : 'sem chuva'}</em>}</small>
+                      <b>{fmtNum(e.area_ha)} ha</b><span>{e.municipio}</span><small className={`c-${e.certeza}`}>{CERTEZA[e.certeza].label} · {fmtDate(e.date, false)}{e.chuva && <em className={`vb v-${e.chuva.veredito}`}> · {e.chuva.veredito === 'duvida' ? 'pode ser chuva' : 'sem chuva'}</em>}{e.s1?.alerta && <em className="vb s1"> · Sentinel-1 {(e.s1.dias_antes ?? 0) > 0 ? `avisou ${e.s1.dias_antes} d antes` : 'também viu'}</em>}</small>
                     </button>
                   </li>
                 ))}
@@ -190,6 +190,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
         {filters.layers.fogo && <span><i style={{ background: COLORS.fogo }} />queimada</span>}
         {filters.layers.floresta && <span><i style={{ background: COLORS.floresta }} />floresta derrubada</span>}
         {filters.layers.floresta && data.rain && <span><i className="ring" style={{ borderColor: COLORS.chuva }} />pode ser chuva</span>}
+        {filters.layers.floresta && data.meta.s1 && <span><i className="ring" style={{ borderColor: COLORS.s1 }} />Sentinel-1 também viu</span>}
         {filters.layers.floresta && terreno && <span><i className="hatch" />sem dado de floresta</span>}
       </div>
 

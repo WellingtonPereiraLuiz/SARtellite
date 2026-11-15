@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
 import { campos, CERTEZA, VEREDITO, type Chuva, type ForestEvent, type Municipio, type S1, type Serie } from '../lib/ro';
 import { COLORS } from './MapView';
@@ -95,6 +96,22 @@ function Shell({ tag, color, title, onClose, children }: { tag: string; color: s
   );
 }
 
+function Dancas({ e }: { e: ForestEvent }) {
+  const has1 = !!e.chuva, has2 = !!(e.s1 && e.s1.serie.length > 2);
+  const [tab, setTab] = useState<1 | 2>(has1 ? 1 : 2);
+  if (!has1 && !has2) return null;
+  return (
+    <div className="dancas">
+      <div className="d-tabs" role="tablist" aria-label="Danças dos satélites">
+        <button type="button" role="tab" aria-selected={tab === 1} disabled={!has1} className={tab === 1 ? 'on' : ''} onClick={() => setTab(1)}><i style={{ background: '#5FB8FF' }} />1. Corte ou chuva?</button>
+        <button type="button" role="tab" aria-selected={tab === 2} disabled={!has2} className={tab === 2 ? 'on' : ''} onClick={() => setTab(2)}><i style={{ background: '#C9A6FF' }} />2. Alerta em 2 etapas</button>
+      </div>
+      {tab === 1 && e.chuva && <CorteOuChuva c={e.chuva} />}
+      {tab === 2 && e.s1 && <AlertaDuasEtapas s={e.s1} fogo={e.fogo_dias.length} />}
+    </div>
+  );
+}
+
 export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => void }) {
   const c = CERTEZA[e.certeza];
   return (
@@ -105,8 +122,7 @@ export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => vo
         <li><span>Tamanho</span>{fmtNum(campos(e.area_ha))} campos de futebol</li>
       </ul>
       {e.serie && <Spark s={e.serie} mark={e.date} />}
-      {e.chuva && <CorteOuChuva c={e.chuva} />}
-      {e.s1 && e.s1.serie.length > 2 && <AlertaDuasEtapas s={e.s1} fogo={e.fogo_dias.length} />}
+      <Dancas e={e} />
       <div className="clues">
         {e.inpe.length > 0 && <span className="clue">INPE: {classe(e.inpe[0].classe)} em {fmtDate(e.inpe[0].data, false)}</span>}
         {e.fogo_dias.length > 0 && <span className="clue fire">Fogo perto em {e.fogo_dias.length} {e.fogo_dias.length === 1 ? 'dia' : 'dias'}</span>}
