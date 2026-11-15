@@ -1,0 +1,8 @@
+numpy
+scipy
+pillow
+pyproj
+rasterio
+# só para os HDF5 NISAR completos (nisar_gcov_change.py, inspecionar_nisar_gcov.py):
+h5py
+earthaccess
