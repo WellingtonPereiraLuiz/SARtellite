@@ -1,0 +1,25 @@
+{
+ "image": "ro/landcover.png",
+ "corners": [
+  [
+   -66.9,
+   -7.799999999999998
+  ],
+  [
+   -59.7,
+   -7.799999999999998
+  ],
+  [
+   -59.7,
+   -13.799999999999994
+  ],
+  [
+   -66.9,
+   -13.799999999999994
+  ]
+ ],
+ "year": "2023",
+ "nocoverage": "ro/nocoverage.png",
+ "nocoverage_share": 0.376,
+ "source": "Impact Observatory / Microsoft / Esri, cobertura do solo 10 m"
+}

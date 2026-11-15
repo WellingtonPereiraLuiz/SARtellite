@@ -1,0 +1,73 @@
+{
+ "generated_at": "2026-11-15T04:40:23+00:00",
+ "nisar": {
+  "passagens": 412,
+  "quadros": 45,
+  "primeira": "2026-06-18",
+  "ultima": "2026-10-30",
+  "com_hv": 280,
+  "grade_kml": 33,
+  "grade_ajustada": 4,
+  "teste_grade_max_px": 1,
+  "quadros_floresta": 12
+ },
+ "floresta": {
+  "eventos": 46,
+  "mostrados": 31,
+  "ha_mostrados": 586,
+  "por_certeza": {
+   "confirmado": 11,
+   "provavel": 20,
+   "possivel": 15
+  },
+  "com_fogo": 16,
+  "validacao_pixels": {
+   "our_ha": 862,
+   "deter_ha": 5219,
+   "deter_polys": 265,
+   "precision_near_deter": 0.109,
+   "deter_polys_found": 0.023
+  },
+  "params": {
+   "BASE_MIN": 160,
+   "FLOOD_BASE": 242,
+   "DROP": 45,
+   "KEEP": 30,
+   "KEEP_N": 1,
+   "QC_MAX": 0.03,
+   "MIN_PX": 3,
+   "CROP": 45,
+   "FRAME_MAX": 0.004,
+   "MIN_DATES": 6,
+   "LOCAL": 33,
+   "BASE_DEV": 25,
+   "SEASONAL": 15
+  }
+ },
+ "lavoura": {
+  "celulas": 10632,
+  "ha": 637637,
+  "por_sentido": {
+   "colheita": 4426,
+   "plantio": 5212,
+   "misto": 994
+  }
+ },
+ "deter": {
+  "poligonos": 662,
+  "por_classe": {
+   "CICATRIZ_DE_QUEIMADA": 104,
+   "CS_DESORDENADO": 57,
+   "DESMATAMENTO_CR": 365,
+   "DEGRADACAO": 96,
+   "DESMATAMENTO_VEG": 6,
+   "CS_GEOMETRICO": 32,
+   "MINERACAO": 2
+  }
+ },
+ "fogo": {
+  "focos": 29427,
+  "fonte": "INPE Programa Queimadas (detecções VIIRS e MODIS)",
+  "url": "https://terrabrasilis.dpi.inpe.br/queimadas/portal/dados-abertos/"
+ }
+}
