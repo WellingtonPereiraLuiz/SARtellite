@@ -6,20 +6,21 @@ import { loadRo, type Filters, type Layer, type RoData } from './lib/ro';
 const Profile = lazy(() => import('./components/Profile'));
 const Como = lazy(() => import('./components/Pages').then((m) => ({ default: m.Como })));
 const Fontes = lazy(() => import('./components/Pages').then((m) => ({ default: m.Fontes })));
+const Danca = lazy(() => import('./components/Danca'));
 
-type View = 'inicio' | 'mapa' | 'perfil' | 'como-funciona' | 'fontes';
+type View = 'inicio' | 'mapa' | 'danca' | 'perfil' | 'como-funciona' | 'fontes';
 const VIEWS: { id: View; label: string }[] = [
-  { id: 'inicio', label: 'Início' }, { id: 'mapa', label: 'Mapa' }, { id: 'perfil', label: 'Meu painel' }, { id: 'como-funciona', label: 'Como funciona' }, { id: 'fontes', label: 'Fontes' },
+  { id: 'inicio', label: 'Início' }, { id: 'mapa', label: 'Mapa' }, { id: 'danca', label: 'A dança' }, { id: 'perfil', label: 'Meu painel' }, { id: 'como-funciona', label: 'Como funciona' }, { id: 'fontes', label: 'Fontes' },
 ];
 const viewFromHash = (): View => VIEWS.find((v) => `#${v.id}` === location.hash)?.id ?? 'inicio';
-const ALL: Record<Layer, boolean> = { fogo: true, floresta: true, lavoura: true };
+const ALL: Record<Layer, boolean> = { fogo: true, floresta: true };
 
 export default function App() {
   const [data, setData] = useState<RoData | null>(null);
   const [fatal, setFatal] = useState<string | null>(null);
   const [view, setView] = useState<View>(viewFromHash);
   const [mapSeen, setMapSeen] = useState(view === 'mapa');
-  const [filters, setFilters] = useState<Filters>({ range: [0, 0], municipio: null, layers: ALL, fracos: false, soProtegidas: false });
+  const [filters, setFilters] = useState<Filters>({ range: [0, 0], municipio: null, layers: ALL, fracos: false, soProtegidas: false, duvidas: true });
   const [jump, setJump] = useState<{ id: string | null; n: number }>({ id: null, n: 0 });
   const [reduce, setReduce] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
 
@@ -38,7 +39,7 @@ export default function App() {
   useEffect(() => { document.documentElement.classList.toggle('reduce-motion', reduce); }, [reduce]);
   const go = (v: View) => { if (location.hash !== `#${v}`) location.hash = v; setView(v); };
   const openMap = (only?: Layer) => {
-    if (only) setFilters((f) => ({ ...f, layers: { fogo: only === 'fogo', floresta: only === 'floresta', lavoura: only === 'lavoura' } }));
+    if (only) setFilters((f) => ({ ...f, layers: { fogo: only === 'fogo', floresta: only === 'floresta' } }));
     else setFilters((f) => ({ ...f, layers: ALL }));
     go('mapa');
   };
@@ -72,6 +73,7 @@ export default function App() {
               {view === 'perfil' && <Profile data={data} onOpenMun={(id) => { setFilters((f) => ({ ...f, layers: ALL })); setJump((j) => ({ id, n: j.n + 1 })); go('mapa'); }} />}
               {view === 'como-funciona' && <Como data={data} reduce={reduce} onMap={() => openMap()} />}
               {view === 'fontes' && <Fontes data={data} />}
+              {view === 'danca' && <Danca data={data} onMap={() => openMap('floresta')} />}
             </Suspense>
           </>
         )}

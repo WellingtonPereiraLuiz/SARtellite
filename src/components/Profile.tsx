@@ -5,8 +5,8 @@ import { COLORS } from './MapView';
 
 type Persona = 'produtor' | 'prefeitura' | 'comunidade';
 interface Prefs { persona: Persona; seguindo: string[]; alertas: Record<Layer, boolean> }
-const KEY = 'sartellite.perfil.v1';
-const DEFAULT: Prefs = { persona: 'produtor', seguindo: ['1100304'], alertas: { fogo: true, floresta: true, lavoura: false } };
+const KEY = 'sartellite.perfil.v2';
+const DEFAULT: Prefs = { persona: 'produtor', seguindo: ['1100304'], alertas: { fogo: true, floresta: true } };
 
 const load = (): Prefs => {
   try { const s = localStorage.getItem(KEY); return s ? { ...DEFAULT, ...JSON.parse(s) } : DEFAULT; } catch { return DEFAULT; }
@@ -20,7 +20,6 @@ const PERSONAS: Record<Persona, { t: string; d: string }> = {
 const LAY: { l: Layer; t: string; c: string }[] = [
   { l: 'fogo', t: 'Queimadas', c: COLORS.fogo },
   { l: 'floresta', t: 'Floresta derrubada', c: COLORS.floresta },
-  { l: 'lavoura', t: 'Lavoura', c: COLORS.lavoura },
 ];
 
 export default function Profile({ data, onOpenMun }: { data: RoData; onOpenMun: (id: string) => void }) {
@@ -29,13 +28,14 @@ export default function Profile({ data, onOpenMun }: { data: RoData; onOpenMun: 
   useEffect(() => { try { localStorage.setItem(KEY, JSON.stringify(p)); } catch { /* sem armazenamento: segue em memória */ } }, [p]);
 
   const resumo = useMemo(() => {
-    const out = new Map<string, { focos: number; floresta: number; lavoura: number }>();
+    const out = new Map<string, { focos: number; floresta: number; semChuva: number; duvida: number }>();
     for (const id of p.seguindo) {
       const mi = data.fireMun.indexOf(id);
       out.set(id, {
         focos: mi < 0 ? 0 : data.fires.filter((r) => r[3] === mi).length,
         floresta: data.events.filter((e) => e.cd_mun === id && e.certeza !== 'possivel').reduce((a, e) => a + e.area_ha, 0),
-        lavoura: data.farm.filter((r) => r[6] === id).reduce((a, r) => a + r[4], 0),
+        semChuva: data.events.filter((e) => e.cd_mun === id && e.certeza !== 'possivel' && e.chuva && e.chuva.veredito !== 'duvida').length,
+        duvida: data.events.filter((e) => e.cd_mun === id && e.certeza !== 'possivel' && e.chuva?.veredito === 'duvida').length,
       });
     }
     return out;
@@ -78,7 +78,7 @@ export default function Profile({ data, onOpenMun }: { data: RoData; onOpenMun: 
                 <ul>
                   <li style={{ ['--c' as string]: COLORS.fogo }}><i /><b>{fmtNum(r.focos)}</b> focos de queimada</li>
                   <li style={{ ['--c' as string]: COLORS.floresta }}><i /><b>{r.floresta ? haTxt(r.floresta) : '0 ha'}</b> de floresta derrubada</li>
-                  <li style={{ ['--c' as string]: COLORS.lavoura }}><i /><b>{haTxt(r.lavoura)}</b> de lavoura em movimento</li>
+                  {(r.semChuva > 0 || r.duvida > 0) && <li style={{ ['--c' as string]: COLORS.chuva }}><i /><b>{r.semChuva}</b> sem chuva · <b>{r.duvida}</b> pode ser chuva</li>}
                 </ul>
                 <button type="button" className="btn" onClick={() => onOpenMun(id)}>Ver no mapa</button>
               </article>

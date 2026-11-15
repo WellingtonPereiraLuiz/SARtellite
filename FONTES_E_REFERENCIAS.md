@@ -1,7 +1,7 @@
 # Fontes de dados e referências
 
 Documento vivo do SARtellite. **Toda vez que um dado, número ou frase nova entrar no site, no pitch ou nos slides, a fonte entra aqui.**
-Última revisão: 15 nov 2026.
+Última revisão: 15 nov 2026 (manhã: entrou a Meteomatics, saiu a lavoura).
 
 Legenda: ✅ usado no site · 📣 usado só na narrativa/pitch · ⏳ planejado · ⚠️ não verificado
 
@@ -17,7 +17,7 @@ Legenda: ✅ usado no site · 📣 usado só na narrativa/pitch · ⏳ planejado
 | D6 | **NASA Blue Marble** (via NASA GIBS) | Fundo do mapa, mundo inteiro | https://visibleearth.nasa.gov/collection/1484/blue-marble · https://nasa-gibs.github.io/gibs-api-docs/ | ✅ ladrilhos (mundo z0–3, América do Sul z4–6, RO z7–8) em `public/data/tiles/bm` |
 | D7 | **Natural Earth** (países, estados, rios, cidades) | Contornos, busca de lugares fora de RO | https://www.naturalearthdata.com/ | ✅ |
 | D8 | **NASA FIRMS** | Alternativa ao INPE para queimadas, com mais histórico | https://firms.modaps.eosdis.nasa.gov/api/ (exige `FIRMS_MAP_KEY`) | ⏳ o pipeline troca sozinho quando a chave existir |
-| D9 | **Meteomatics** (conta do hackathon) | Chuva e temperatura por município, para contexto | API paga; credencial nunca vai para o navegador | ⏳ não usado no protótipo |
+| D9 | **Meteomatics Weather API** (conta do hackathon, modelo `mix`, `precip_24h:mm`) | Caso 1 "Corte ou chuva?": chuva nas 48 h antes de cada imagem NISAR em cada lugar de floresta; chuva média diária de RO na linha do tempo | https://www.meteomatics.com/en/weather-api/ · baixado pelo conector MCP em 15/11/2026 12:48 UTC (cache em `pipeline/cache/ro/meteomatics/`); `r11_rain.py` também baixa direto com `METEOMATICS_USERNAME`/`METEOMATICS_PASSWORD`. Credencial nunca vai para o navegador | ✅ |
 | D10 | **NISAR GCOV calibrado (HDF5, 20 m)** | Precisão maior na floresta | ASF, exige Earthdata Login, ~2 GB por imagem | ⏳ próximo passo |
 | D11 | JRC Global Surface Water, Sentinel-1 RTC, Sentinel-2 L2A (Planetary Computer) | Usados na v1 (antes e depois em duas áreas) | https://planetarycomputer.microsoft.com/ | Histórico, fora do site atual |
 
@@ -61,3 +61,7 @@ MapLibre GL JS 5 (BSD-3) · React 18 · Vite 6 · Archivo e IBM Plex (SIL OFL) �
 1. Dado novo no site → linha na seção 1, com link e o arquivo em `public/data` que ele gera.
 2. Frase nova no pitch → linha na seção 2 com link. Sem link, marque ⚠️ e não use em público.
 3. Rodou o pipeline de novo → atualize os números da coluna Status e a data no topo.
+
+## 6. Mudanças de escopo
+
+- **15/11, manhã:** a camada Lavoura saiu do site (o detector continua no pipeline, `r06`/`r07`). No lugar, entrou o caso 1 "Corte ou chuva?" (NISAR + Meteomatics). A narrativa ativa do pitch é "No satellite dances alone" (v3); os casos 2 a 8 aparecem como próximos passos na página "A dança".

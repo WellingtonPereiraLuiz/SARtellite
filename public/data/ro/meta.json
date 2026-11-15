@@ -69,5 +69,29 @@
   "focos": 28984,
   "fonte": "INPE Programa Queimadas (detecções VIIRS e MODIS)",
   "url": "https://terrabrasilis.dpi.inpe.br/queimadas/portal/dados-abertos/"
+ },
+ "chuva": {
+  "fonte": "Meteomatics Weather API",
+  "modelo": "mix",
+  "limite_mm": 5.0,
+  "corte": 8,
+  "corte_apos_chuva": 19,
+  "duvida": 17,
+  "sem_dado": 2,
+  "mm_periodo": [
+   11.0,
+   0.7,
+   40.6,
+   27.8,
+   19.5,
+   33.7,
+   73.4,
+   87.9,
+   148.3,
+   127.0,
+   107.9,
+   152.3
+  ],
+  "url": "https://www.meteomatics.com/en/weather-api/"
  }
 }

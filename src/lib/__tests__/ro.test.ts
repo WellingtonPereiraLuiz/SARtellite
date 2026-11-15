@@ -1,14 +1,14 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { campos, filterEvents, filterFarm, filterFires, frase, haTxt, norm, searchPlaces, totals, type FarmRow, type FireRow, type Filters, type ForestEvent, type Place } from '../ro';
+import { existsSync } from 'node:fs';
+import { campos, filterEvents, filterFires, frase, haTxt, norm, searchPlaces, totals, type FireRow, type Filters, type ForestEvent, type Place, type Rain } from '../ro';
 
 const events = JSON.parse(readFileSync('public/data/ro/events.json', 'utf8')) as ForestEvent[];
-const farm = (JSON.parse(readFileSync('public/data/ro/farm.json', 'utf8')) as { rows: FarmRow[] }).rows;
 const periods = (JSON.parse(readFileSync('public/data/ro/periods.json', 'utf8')) as { periods: { i: number; start: string; end: string }[] }).periods;
 const fireJson = JSON.parse(readFileSync('public/data/ro/fires.json', 'utf8')) as { rows: FireRow[]; mun_ids: string[] };
 const places = JSON.parse(readFileSync('public/data/ro/gazetteer.json', 'utf8')) as Place[];
-const layers = { fogo: true, floresta: true, lavoura: true };
-const all: Filters = { range: [0, periods.length - 1], municipio: null, layers, fracos: false, soProtegidas: false };
+const layers = { fogo: true, floresta: true };
+const all: Filters = { range: [0, periods.length - 1], municipio: null, layers, fracos: false, soProtegidas: false, duvidas: true };
 
 describe('períodos do NISAR', () => {
   it('começam em 17 jun 2026 e têm 12 dias cada', () => {
@@ -35,14 +35,12 @@ describe('filtros', () => {
     const r = filterEvents(events, { ...all, range: [5, 5] });
     expect(r.every((e) => e.period === 5)).toBe(true);
     const mun = events.find((e) => e.cd_mun)!.cd_mun;
-    expect(filterFarm(farm, { ...all, municipio: mun }).every((x) => x[6] === mun)).toBe(true);
+    expect(filterEvents(events, { ...all, municipio: mun, fracos: true }).every((x) => x.cd_mun === mun)).toBe(true);
   });
   it('desligar um insight esvazia só ele', () => {
     expect(filterEvents(events, { ...all, layers: { ...layers, floresta: false } })).toHaveLength(0);
-    expect(filterFarm(farm, { ...all, layers: { ...layers, lavoura: false } })).toHaveLength(0);
     expect(filterFires(fireJson.rows, fireJson.mun_ids, { ...all, layers: { ...layers, fogo: false } })).toHaveLength(0);
     expect(filterFires(fireJson.rows, fireJson.mun_ids, { ...all, layers: { ...layers, fogo: false } }, true).length).toBe(fireJson.rows.length);
-    expect(filterFarm(farm, all).length).toBeGreaterThan(0);
   });
 });
 
@@ -58,11 +56,10 @@ describe('linguagem simples', () => {
   });
   it('os totais somam os filtrados', () => {
     const ev = filterEvents(events, all);
-    const t = totals(ev, farm, fireJson.rows);
+    const t = totals(ev, fireJson.rows);
     expect(t.focos).toBe(fireJson.rows.length);
     expect(filterFires(fireJson.rows, fireJson.mun_ids, all).length).toBe(fireJson.rows.length);
     expect(t.florestaN).toBe(ev.length);
-    expect(Math.round(t.lavouraHa)).toBe(Math.round(farm.reduce((a, r) => a + r[4], 0)));
   });
 });
 
@@ -105,5 +102,24 @@ describe('busca', () => {
   it('escreve hectares grandes em mil', () => {
     expect(haTxt(637637)).toBe('638 mil ha');
     expect(haTxt(586)).toBe('586 ha');
+  });
+});
+
+describe('corte ou chuva (NISAR + Meteomatics)', () => {
+  const comChuva = events.filter((e) => e.chuva);
+  it('o veredito segue a regra das 48 h', () => {
+    const lim = existsSync('public/data/ro/rain.json') ? (JSON.parse(readFileSync('public/data/ro/rain.json', 'utf8')) as Rain).limite_mm : 5;
+    for (const e of comChuva) {
+      const c = e.chuva!;
+      const seco = c.base_mm < lim && c.deteccao_mm < lim;
+      if (seco) expect(c.veredito).toBe('corte');
+      else expect(c.veredito).toBe(c.secas_depois > 0 ? 'corte_apos_chuva' : 'duvida');
+      expect(c.base < c.deteccao).toBe(true);
+    }
+  });
+  it('esconder o que pode ser chuva tira só as dúvidas', () => {
+    const r = filterEvents(events, { ...all, fracos: true, duvidas: false });
+    expect(r.some((e) => e.chuva?.veredito === 'duvida')).toBe(false);
+    expect(r.length).toBe(events.length - comChuva.filter((e) => e.chuva!.veredito === 'duvida').length);
   });
 });

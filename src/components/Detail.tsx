@@ -1,5 +1,5 @@
 import { fmtDate, fmtNum } from '../lib/time';
-import { campos, CERTEZA, fraseLavoura, type FarmRow, type ForestEvent, type Municipio, type Period, type Serie } from '../lib/ro';
+import { campos, CERTEZA, VEREDITO, type Chuva, type ForestEvent, type Municipio, type Serie } from '../lib/ro';
 import { COLORS } from './MapView';
 
 function Spark({ s, mark }: { s: Serie; mark: string }) {
@@ -21,6 +21,29 @@ function Spark({ s, mark }: { s: Serie; mark: string }) {
       </svg>
       <figcaption><i className="k here" />aqui <i className="k around" />floresta em volta</figcaption>
     </figure>
+  );
+}
+
+/** Caso 1: o NISAR vê a mudança; a Meteomatics diz se choveu perto das duas imagens. */
+export function CorteOuChuva({ c, limite = 5 }: { c: Chuva; limite?: number }) {
+  const v = VEREDITO[c.veredito];
+  const max = Math.max(limite * 3, c.base_mm, c.deteccao_mm);
+  const Bar = ({ label, d, mm }: { label: string; d: string; mm: number }) => (
+    <li>
+      <span>{label} <small>{fmtDate(d, false)}</small></span>
+      <i className="rb"><i style={{ width: `${Math.max(2, (mm / max) * 100)}%` }} className={mm >= limite ? 'wet' : ''} /></i>
+      <b>{fmtNum(mm, mm < 10 ? 1 : 0)} mm</b>
+    </li>
+  );
+  return (
+    <section className={`coc v-${c.veredito}`} aria-label="Corte ou chuva?">
+      <header><b>Corte ou chuva?</b><span className="pill" style={{ ['--c' as string]: c.veredito === 'duvida' ? '#5FB8FF' : '#9BE15D' }}><i />{v.label}</span></header>
+      <ul>
+        <Bar label="Imagem de antes" d={c.base} mm={c.base_mm} />
+        <Bar label="Imagem da queda" d={c.deteccao} mm={c.deteccao_mm} />
+      </ul>
+      <p className="note">Chuva nas 48 h antes de cada imagem (Meteomatics). {v.texto}{c.secas_depois > 0 && c.veredito !== 'corte' ? ` A queda continuou em ${c.secas_depois} ${c.secas_depois === 1 ? 'passagem seca' : 'passagens secas'}.` : ''}</p>
+    </section>
   );
 }
 
@@ -46,25 +69,12 @@ export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => vo
         <li><span>Tamanho</span>{fmtNum(campos(e.area_ha))} campos de futebol</li>
       </ul>
       {e.serie && <Spark s={e.serie} mark={e.date} />}
+      {e.chuva && <CorteOuChuva c={e.chuva} />}
       <div className="clues">
         {e.inpe.length > 0 && <span className="clue">INPE: {classe(e.inpe[0].classe)} em {fmtDate(e.inpe[0].data, false)}</span>}
         {e.fogo_dias.length > 0 && <span className="clue fire">Fogo perto em {e.fogo_dias.length} {e.fogo_dias.length === 1 ? 'dia' : 'dias'}</span>}
       </div>
       <p className="note">{c.texto} O radar não diz quem fez nem se foi permitido.</p>
-    </Shell>
-  );
-}
-
-export function FarmDetail({ row, periods, mun, onClose }: { row: FarmRow; periods: Period[]; mun?: Municipio; onClose: () => void }) {
-  const p = periods[row[2]];
-  return (
-    <Shell tag={row[5] === 'colheita' ? 'Colheita' : row[5] === 'plantio' ? 'Plantio' : 'Lavoura'} color={COLORS[row[5] === 'plantio' ? 'plantio' : 'colheita']} title={fraseLavoura(row[5])} onClose={onClose}>
-      <ul className="facts">
-        <li><span>Onde</span>{mun?.nome ?? 'Rondônia'}</li>
-        <li><span>Quando</span>{fmtDate(p.start, false)} a {fmtDate(p.end, false)}</li>
-        <li><span>Área</span>{fmtNum(row[4])} ha neste quadrado de 1 km</li>
-      </ul>
-      <p className="note">Em Rondônia, junho a agosto é colheita do milho safrinha; de setembro em diante começa o plantio da soja. Chuva também deixa o solo mais claro no radar.</p>
     </Shell>
   );
 }
@@ -88,7 +98,6 @@ export function MunDetail({ m, onFilter, filtered, onClose, focos }: { m: Munici
       <ul className="facts">
         <li><span>Queimadas</span>{fmtNum(focos)} focos desde junho</li>
         <li><span>Floresta</span>{m.floresta_ha > 0 ? `${fmtNum(m.floresta_ha)} ha derrubados` : 'sem sinal forte'}</li>
-        <li><span>Lavoura</span>{m.lavoura_ha > 0 ? `${fmtNum(m.lavoura_ha)} ha mudaram` : 'pouca ou nenhuma'}</li>
       </ul>
       <button type="button" className="btn primary" onClick={onFilter}>{filtered ? 'Ver Rondônia inteira' : `Filtrar ${m.nome}`}</button>
     </Shell>

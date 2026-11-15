@@ -121,7 +121,7 @@ button, input, select { font: inherit; color: inherit; }
 .top ol small { grid-column: 2; color: var(--muted); font-size: 12px; }
 .top .c-confirmado { color: #ffcf9a; }
 
-.drawer { position: absolute; z-index: 6; top: 72px; right: 16px; width: 340px; animation: slide 0.45s var(--ease) both; }
+.drawer { position: absolute; z-index: 6; top: 72px; right: 16px; width: 360px; max-height: calc(100% - 72px - 196px); overflow-y: auto; scrollbar-width: thin; border-radius: var(--r); animation: slide 0.45s var(--ease) both; }
 @keyframes slide { from { opacity: 0; transform: translateX(16px); } }
 .detail { padding: 16px; display: grid; gap: 10px; }
 .detail header { display: flex; justify-content: space-between; align-items: center; }
@@ -339,3 +339,57 @@ th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
 .seg { display: inline-flex; align-items: center; border: 1px solid var(--edge); border-radius: 999px; overflow: hidden; background: var(--glass-2); }
 .seg button { background: none; border: 0; padding: 6px 12px; cursor: pointer; color: var(--muted); font-weight: 500; }
 .seg button.on { background: rgba(255, 255, 255, 0.12); color: var(--text); }
+
+/* ---------- caso 1: corte ou chuva ---------- */
+.coc { border: 1px solid var(--edge); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; background: rgba(255, 255, 255, 0.03); }
+.coc header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.coc .pill { white-space: nowrap; }
+.coc ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.coc li { display: grid; grid-template-columns: 112px 1fr 60px; gap: 8px; align-items: center; font-size: 13px; }
+.coc li small { color: var(--muted); }
+.coc li b { text-align: right; font-variant-numeric: tabular-nums; }
+.rb { display: block; height: 8px; border-radius: 4px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.rb i { display: block; height: 100%; border-radius: 4px; background: #9fb3b8; transition: width 0.6s var(--ease); }
+.rb i.wet { background: #5fb8ff; box-shadow: 0 0 10px #5fb8ff; }
+.coc.v-duvida { border-color: rgba(95, 184, 255, 0.45); }
+.legend i.ring { background: none; border: 2px solid; }
+.vb.v-duvida { color: #9fd3ff; font-style: normal; }
+.vb { font-style: normal; color: #b8e39a; }
+
+/* ---------- a dança ---------- */
+.sec { font-size: 22px; margin: 6px 0 12px; }
+.caso { padding: 16px 18px; display: grid; gap: 8px; }
+.caso.ativo { border-color: rgba(127, 227, 255, 0.5); background: linear-gradient(160deg, rgba(127, 227, 255, 0.1), var(--glass)); }
+.caso header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.caso h3 { font-size: 18px; }
+.caso .par { margin: 0; color: var(--muted); font-size: 13px; font-family: var(--mono); }
+.caso > ul, .dt-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
+.caso > ul > li, .dt-card li { display: grid; grid-template-columns: 18px 1fr; color: #cddada; }
+.ar { color: var(--muted); }
+.caso > ul > li b, .dt-card li b { color: var(--text); }
+.juntos { margin: 4px 0 0; padding-top: 8px; border-top: 1px solid var(--edge); color: #8fe07a; font-weight: 500; }
+.pill.next { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+.pill.next i { display: none; }
+.casos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.caso-live { display: grid; gap: 12px; margin-top: 6px; }
+.stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stats3 div { display: grid; gap: 2px; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); }
+.stats3 b { font-family: var(--display); font-stretch: 112%; font-size: 28px; }
+.stats3 b.ok { color: #9be15d; }
+.stats3 b.wet { color: #5fb8ff; }
+.stats3 span { color: var(--muted); font-size: 13px; }
+.caso-ex { display: grid; gap: 6px; max-width: 520px; }
+.caso-live .btn { justify-self: start; }
+.gaps td { padding: 8px 6px; }
+.gaps td:last-child { color: var(--accent); }
+.dance-teaser { padding: 40px 6vw; }
+.dt-card { padding: 24px; display: grid; gap: 10px; max-width: 760px; border-color: rgba(127, 227, 255, 0.35); }
+.dt-card h2 { font-size: 26px; }
+.dt-card .btn { justify-self: start; }
+@media (max-width: 760px) {
+  .casos, .stats3 { grid-template-columns: 1fr; }
+  .coc li { grid-template-columns: 1fr 52px; }
+  .coc li .rb { grid-column: 1 / -1; grid-row: 2; }
+}
+
+.legend.hidden-l { display: none; }

@@ -3,44 +3,38 @@ import { dataUrl, haTxt, type RoData } from '../lib/ro';
 import { COLORS } from './MapView';
 import type { Layer } from '../lib/ro';
 
-const STORY = [
-  { k: 'Mundo', t: 'El Niño de 2026', d: '+2,0 °C de ago a out: a 2ª maior marca para essa época desde 1950.', s: 'NOAA' },
-  { k: 'Amazônia', t: 'A bomba d’água', d: 'A floresta devolve água ao ar e ajuda a fazer a chuva do continente.', s: '' },
-  { k: 'Rondônia', t: 'Porto Velho em emergência', d: 'Estiagem reconhecida em outubro; 22,9 mil pessoas afetadas.', s: 'Defesa Civil' },
-  { k: 'Problema', t: 'Fumaça e nuvem', d: 'Na seca, fogo e derrubada acontecem onde a foto não enxerga.', s: '' },
-  { k: 'Solução', t: 'O radar vê', d: 'O NISAR atravessa nuvem e fumaça a cada 12 dias. O SARtellite traduz.', s: 'NASA/ISRO' },
-];
-
-export default function Home({ data, onOpen, go }: { data: RoData; onOpen: (only?: Layer) => void; go: (v: 'perfil' | 'como-funciona') => void }) {
+export default function Home({ data, onOpen, go }: { data: RoData; onOpen: (only?: Layer) => void; go: (v: 'perfil' | 'como-funciona' | 'danca') => void }) {
   const m = data.meta;
   const focos = data.fires.length;
-  const lav = data.farm.reduce((a, r) => a + r[4], 0);
+  const com = data.events.filter((e) => e.chuva && e.certeza !== 'possivel');
+  const ok = com.filter((e) => e.chuva!.veredito !== 'duvida').length;
   return (
     <div className="home">
       <section className="hero" style={{ backgroundImage: `linear-gradient(90deg, rgba(5,11,16,0.96) 0%, rgba(5,11,16,0.7) 45%, rgba(5,11,16,0.15) 100%), url(${dataUrl('ro/hero.webp')})` }}>
         <div className="hero-in">
           <p className="kicker">NASA Space Apps 2026 · Dancing with the SARs · Equipe Astrópodes</p>
           <h1>A floresta muda.<br />O radar vê.</h1>
-          <p className="sub">Queimadas, floresta derrubada e lavouras em Rondônia, vistas pelo radar NISAR, mesmo com nuvem e fumaça.</p>
+          <p className="sub">Queimadas e floresta derrubada em Rondônia, vistas pelo radar NISAR mesmo com nuvem e fumaça, e conferidas com a chuva para não dar alarme falso.</p>
           <div className="kpis">
             <button type="button" className="kpi glass" onClick={() => onOpen('fogo')} style={{ ['--c' as string]: COLORS.fogo }}><i /><b>{fmtNum(focos)}</b><span>focos de queimada</span></button>
             <button type="button" className="kpi glass" onClick={() => onOpen('floresta')} style={{ ['--c' as string]: COLORS.floresta }}><i /><b>{haTxt(m.floresta.ha_mostrados)}</b><span>de floresta derrubada</span></button>
-            <button type="button" className="kpi glass" onClick={() => onOpen('lavoura')} style={{ ['--c' as string]: COLORS.lavoura }}><i /><b>{haTxt(lav)}</b><span>de lavoura em movimento</span></button>
+            <button type="button" className="kpi glass" onClick={() => go('danca')} style={{ ['--c' as string]: COLORS.chuva }}><i /><b>{com.length ? `${ok} de ${com.length}` : '—'}</b><span>mudanças confirmadas sem chuva</span></button>
           </div>
           <div className="cta"><button type="button" className="btn primary big" onClick={() => onOpen()}>Abrir o mapa</button><span>desde 18 jun 2026 · {fmtNum(m.nisar.passagens)} imagens de radar</span></div>
         </div>
       </section>
 
-      <section className="story">
-        {STORY.map((s, i) => (
-          <article key={s.k} className="beat glass">
-            <span className="n">{i + 1}</span>
-            <p className="bk">{s.k}</p>
-            <h3>{s.t}</h3>
-            <p>{s.d}</p>
-            {s.s && <small>{s.s}</small>}
-          </article>
-        ))}
+      <section className="dance-teaser">
+        <div className="glass dt-card">
+          <p className="kicker">Nenhum satélite dança sozinho</p>
+          <h2>Corte ou chuva?</h2>
+          <ul>
+            <li><span className="ar">→</span><span><b>NISAR → clima:</b> a API de chuva não enxerga nem um graveto; o NISAR vê a floresta.</span></li>
+            <li><span className="ar">←</span><span><b>Meteomatics → NISAR:</b> diz se o eco mudou por solo molhado ou por tronco caído.</span></li>
+          </ul>
+          <p className="juntos">Juntos: mudança real, sem falso alarme de chuva.</p>
+          <button type="button" className="btn" onClick={() => go('danca')}>Ver os 8 casos</button>
+        </div>
       </section>
 
       <section className="split">

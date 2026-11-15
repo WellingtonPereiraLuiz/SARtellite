@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
-import { CERTEZA, filterEvents, filterFarm, filterFires, haTxt, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData } from '../lib/ro';
-import { FarmDetail, FireDetail, ForestDetail, MunDetail } from './Detail';
+import { CERTEZA, filterEvents, filterFires, haTxt, searchPlaces, seriesByPeriod, totals, type Filters, type Layer, type Place, type RoData, type Serie3 } from '../lib/ro';
+import { FireDetail, ForestDetail, MunDetail } from './Detail';
 import MapView, { COLORS, RO_BOUNDS, type Pick } from './MapView';
 import TimeSeries from './TimeSeries';
 
@@ -28,13 +28,12 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   const [more, setMore] = useState(false);
   const [showProt, setShowProt] = useState(false);
   const [terreno, setTerreno] = useState(true);
-  const [compare, setCompare] = useState<Layer[]>(['fogo', 'floresta']);
+  const [compare, setCompare] = useState<Serie3[]>(['floresta', 'chuva']);
   const [listOpen, setListOpen] = useState(true);
 
   const events = useMemo(() => filterEvents(data.events, filters), [data, filters]);
-  const farm = useMemo(() => filterFarm(data.farm, filters), [data, filters]);
   const fires = useMemo(() => filterFires(data.fires, data.fireMun, filters), [data, filters]);
-  const t = useMemo(() => totals(filterEvents(data.events, filters, true), filterFarm(data.farm, filters, true), filterFires(data.fires, data.fireMun, filters, true)), [data, filters]);
+  const t = useMemo(() => totals(filterEvents(data.events, filters, true), filterFires(data.fires, data.fireMun, filters, true)), [data, filters]);
   const series = useMemo(() => seriesByPeriod(data, filters), [data, filters]);
   const results = useMemo(() => searchPlaces(data.places, q), [data.places, q]);
   const munSel = data.municipios.find((m) => m.id === filters.municipio);
@@ -69,14 +68,13 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
 
   const LAYERS: { l: Layer; label: string; value: string; sub: string; color: string }[] = [
     { l: 'fogo', label: 'Queimadas', value: fmtNum(t.focos), sub: `focos · ${t.focos ? Math.round((t.focosFloresta / t.focos) * 100) : 0}% na floresta`, color: COLORS.fogo },
-    { l: 'floresta', label: 'Floresta derrubada', value: haTxt(t.florestaHa), sub: `${t.florestaN} lugares · ${t.confirmados} INPE confirmou`, color: COLORS.floresta },
-    { l: 'lavoura', label: 'Lavouras', value: haTxt(t.lavouraHa), sub: `colheita e plantio`, color: COLORS.lavoura },
+    { l: 'floresta', label: 'Floresta derrubada', value: haTxt(t.florestaHa), sub: t.comChuva ? `${t.florestaN} lugares · ${t.semChuva} sem chuva · ${t.duvida} pode ser chuva` : `${t.florestaN} lugares · ${t.confirmados} INPE confirmou`, color: COLORS.floresta },
   ];
 
   return (
     <div className="mapage">
       <MapView
-        data={data} events={events} farm={farm} fires={fires} selectedId={selected?.id ?? null} municipio={filters.municipio}
+        data={data} events={events} fires={fires} selectedId={selected?.id ?? null} municipio={filters.municipio}
         showProtegidas={showProt} showTerreno={terreno} showNoCoverage={filters.layers.floresta && terreno} reduce={reduce} focus={focus}
         onPick={(p) => (p?.kind === 'floresta' ? openEvent(p.id) : setPick(p))}
         onMoveOut={setMovedOut}
@@ -121,6 +119,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
             </label>
             <label className="sw-row" htmlFor="o-prot"><input id="o-prot" type="checkbox" checked={showProt} onChange={(e) => setShowProt(e.target.checked)} /> Terras Indígenas e UCs</label>
             <label className="sw-row" htmlFor="o-so"><input id="o-so" type="checkbox" checked={filters.soProtegidas} onChange={(e) => { setFilters((f) => ({ ...f, soProtegidas: e.target.checked })); if (e.target.checked) setShowProt(true); }} /> Só floresta dentro delas</label>
+            {data.rain && <label className="sw-row" htmlFor="o-du"><input id="o-du" type="checkbox" checked={!filters.duvidas} onChange={(e) => setFilters((f) => ({ ...f, duvidas: !e.target.checked }))} /> Esconder o que pode ser chuva</label>}
             <label className="sw-row" htmlFor="o-fr"><input id="o-fr" type="checkbox" checked={filters.fracos} onChange={(e) => setFilters((f) => ({ ...f, fracos: e.target.checked }))} /> Sinais fracos de floresta</label>
             <label className="sw-row" htmlFor="o-ter"><input id="o-ter" type="checkbox" checked={terreno} onChange={(e) => setTerreno(e.target.checked)} /> Cores do terreno</label>
           </div>
@@ -134,7 +133,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
                 {top.map((e) => (
                   <li key={e.id}>
                     <button type="button" className={selected?.id === e.id ? 'on' : ''} onClick={() => openEvent(e.id)}>
-                      <b>{fmtNum(e.area_ha)} ha</b><span>{e.municipio}</span><small className={`c-${e.certeza}`}>{CERTEZA[e.certeza].label} · {fmtDate(e.date, false)}</small>
+                      <b>{fmtNum(e.area_ha)} ha</b><span>{e.municipio}</span><small className={`c-${e.certeza}`}>{CERTEZA[e.certeza].label} · {fmtDate(e.date, false)}{e.chuva && <em className={`vb v-${e.chuva.veredito}`}> · {e.chuva.veredito === 'duvida' ? 'pode ser chuva' : 'sem chuva'}</em>}</small>
                     </button>
                   </li>
                 ))}
@@ -147,7 +146,6 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
       {pick && (
         <div className="drawer">
           {pick.kind === 'floresta' && selected && <ForestDetail e={selected} onClose={() => setPick(null)} />}
-          {pick.kind === 'lavoura' && <FarmDetail row={pick.row} periods={data.periods} mun={data.municipios.find((m) => m.id === pick.row[6])} onClose={() => setPick(null)} />}
           {pick.kind === 'fogo' && <FireDetail day={pick.day} forest={pick.forest} start={data.periods[0].start} onClose={() => setPick(null)} />}
           {pick.kind === 'municipio' && (() => { const m = data.municipios.find((x) => x.id === pick.id); return m ? <MunDetail m={m} focos={munFocos(m.id)} filtered={filters.municipio === m.id} onFilter={() => { setMun(filters.municipio === m.id ? null : m.id); setPick(null); }} onClose={() => setPick(null)} /> : null; })()}
         </div>
@@ -164,10 +162,10 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
         </div>
       )}
 
-      <div className="legend glass" aria-label="Legenda">
+      <div className={`legend glass${pick ? ' hidden-l' : ''}`} aria-label="Legenda">
         {filters.layers.fogo && <span><i style={{ background: COLORS.fogo }} />queimada</span>}
         {filters.layers.floresta && <span><i style={{ background: COLORS.floresta }} />floresta derrubada</span>}
-        {filters.layers.lavoura && <span><i style={{ background: COLORS.colheita }} />colheita <i style={{ background: COLORS.plantio }} />plantio</span>}
+        {filters.layers.floresta && data.rain && <span><i className="ring" style={{ borderColor: COLORS.chuva }} />pode ser chuva</span>}
         {filters.layers.floresta && terreno && <span><i className="hatch" />sem dado de floresta</span>}
       </div>
 

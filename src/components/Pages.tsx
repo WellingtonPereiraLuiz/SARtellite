@@ -10,7 +10,7 @@ export function Como({ data, reduce, onMap }: { data: RoData; reduce: boolean; o
   const c = m.floresta.por_certeza;
   const CARDS = [
     { c: COLORS.floresta, t: 'Floresta derrubada', d: 'O eco “girado” (HV) vem das copas. Se ele cai forte, fica baixo nas passagens seguintes e a floresta em volta não muda junto, marcamos o lugar.' },
-    { c: COLORS.lavoura, t: 'Lavoura', d: 'Só onde já é lavoura: eco caiu é colheita ou solo exposto; eco subiu é planta crescendo ou solo preparado.' },
+    { c: COLORS.chuva, t: 'Corte ou chuva?', d: 'Chão molhado também muda o eco. A Meteomatics diz quanto choveu nas 48 h antes de cada imagem: se estava seco, a mudança é no chão.' },
     { c: COLORS.fogo, t: 'Queimadas', d: 'Focos de calor dos satélites VIIRS e MODIS, via INPE. Contam onde e quando houve fogo. O radar mostra o que mudou depois.' },
   ];
   return (
@@ -25,7 +25,7 @@ export function Como({ data, reduce, onMap }: { data: RoData; reduce: boolean; o
         {CARDS.map((k) => <article key={k.t} className="glass" style={{ ['--c' as string]: k.c }}><i className="bar" /><h2>{k.t}</h2><p>{k.d}</p></article>)}
       </section>
       <section className="two">
-        <div className="glass block"><h2>Dá para dizer</h2><ul className="check"><li>A floresta mudou aqui, por volta desta data.</li><li>A lavoura foi colhida ou plantada neste período.</li><li>Teve fogo perto, segundo os satélites de calor.</li></ul></div>
+        <div className="glass block"><h2>Dá para dizer</h2><ul className="check"><li>A floresta mudou aqui, por volta desta data.</li><li>Se choveu perto das imagens (e se a mudança continuou no seco).</li><li>Teve fogo perto, segundo os satélites de calor.</li></ul></div>
         <div className="glass block"><h2>Não dá para dizer</h2><ul className="cross"><li>Quem derrubou, ou se tinha autorização.</li><li>Que o El Niño causou uma mudança. Ele aumenta o risco; o radar mostra o que já mudou no chão.</li><li>Contar árvores uma por uma.</li></ul></div>
       </section>
       <p className="fine">Dos {m.floresta.eventos} lugares de floresta marcados, mostramos {m.floresta.mostrados}: {c.confirmado ?? 0} que o INPE também viu e {c.provavel ?? 0} prováveis. Os {c.possivel ?? 0} sinais fracos ficam escondidos (dá para ligar em “Mais filtros”).</p>
@@ -38,11 +38,12 @@ export function Fontes({ data }: { data: RoData }) {
   const m = data.meta;
   const v = m.floresta.validacao_pixels;
   const rows: [React.ReactNode, string, string][] = [
-    [<><b>NISAR</b> (NASA e ISRO), GCOV, via <A href="https://search.asf.alaska.edu/">ASF</A></>, 'Floresta e lavoura', `${fmtNum(m.nisar.passagens)} passagens HH e ${fmtNum(m.nisar.com_hv)} HV, ${fmtDate(m.nisar.primeira)} a ${fmtDate(m.nisar.ultima)}`],
+    [<><b>NISAR</b> (NASA e ISRO), GCOV, via <A href="https://search.asf.alaska.edu/">ASF</A></>, 'Floresta derrubada', `${fmtNum(m.nisar.passagens)} passagens HH e ${fmtNum(m.nisar.com_hv)} HV, ${fmtDate(m.nisar.primeira)} a ${fmtDate(m.nisar.ultima)}`],
     [<A href={m.fogo.url}>INPE Programa Queimadas</A>, 'Queimadas', `${fmtNum(m.fogo.focos)} focos (VIIRS e MODIS)`],
+    ...(m.chuva ? [[<A href={m.chuva.url}>Meteomatics Weather API</A>, 'Corte ou chuva?', `chuva de 48 h antes de cada imagem, modelo ${m.chuva.modelo}`] as [React.ReactNode, string, string]] : []),
     [<A href="https://terrabrasilis.dpi.inpe.br/">INPE DETER</A>, 'Conferir a floresta', `${fmtNum(m.deter.poligonos)} alertas desde junho`],
     [<A href="https://geoportal.sedam.ro.gov.br/">GeoPortal SEDAM-RO</A>, 'Municípios, TIs e UCs', 'camadas públicas (WFS)'],
-    [<A href="https://planetarycomputer.microsoft.com/dataset/io-lulc-annual-v02">Cobertura do solo 10 m</A>, 'Onde é floresta e lavoura', `Impact Observatory, ${data.landcover.year}`],
+    [<A href="https://planetarycomputer.microsoft.com/dataset/io-lulc-annual-v02">Cobertura do solo 10 m</A>, 'Onde é floresta', `Impact Observatory, ${data.landcover.year}`],
     [<A href="https://visibleearth.nasa.gov/collection/1484/blue-marble">NASA Blue Marble</A>, 'Fundo do mapa', 'imagem de satélite sem nuvens'],
   ];
   return (
@@ -64,8 +65,8 @@ export function Fontes({ data }: { data: RoData }) {
         <div className="glass"><b>{fmtNum(v.deter_polys_found * 100)}%</b><span>dos polígonos do DETER encontrados (derrubadas pequenas somem no pixel de 3 ha)</span></div>
         <div className="glass"><b>{fmtNum(data.landcover.nocoverage_share * 100)}%</b><span>de Rondônia sem dado bom de floresta (riscado no mapa)</span></div>
       </section>
-      <p className="fine">Por que tão baixo? Usamos a prévia pública do NISAR (8 bits, 180 m). O produto calibrado de 20 m exige login e cerca de 2 GB por imagem: é o próximo passo. A lavoura ainda não foi validada em campo.</p>
-      <p className="fine">Créditos: NISAR, NASA/JPL-Caltech e ISRO, via ASF DAAC · INPE · SEDAM-RO, IBGE, FUNAI, ICMBio · Impact Observatory, Microsoft, Esri · NASA Blue Marble · Natural Earth · MapLibre GL JS.</p>
+      <p className="fine">Por que tão baixo? Usamos a prévia pública do NISAR (8 bits, 180 m). O produto calibrado de 20 m exige login e cerca de 2 GB por imagem: é o próximo passo.</p>
+      <p className="fine">Créditos: NISAR, NASA/JPL-Caltech e ISRO, via ASF DAAC · Meteomatics · INPE · SEDAM-RO, IBGE, FUNAI, ICMBio · Impact Observatory, Microsoft, Esri · NASA Blue Marble · Natural Earth · MapLibre GL JS.</p>
     </div>
   );
 }

@@ -93,3 +93,17 @@ GeoServer `https://geoportal.sedam.ro.gov.br/geoserver/ows` (WFS público):
 - **Contornos da floresta:** suavizados uma única vez (abre e fecha de ~80 m e simplificação). A área em hectares não muda: vem da detecção em pixels.
 
 Lista completa de fontes e referências: [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).
+
+## 9. Caso 1: "Corte ou chuva?" (`r11_rain.py`)
+
+Chão molhado muda o eco do radar. Para não chamar de derrubada uma mudança que é só umidade:
+
+- **Imagens:** para cada lugar de floresta, a última passagem NISAR antes da queda (imagem de antes) e a primeira em que o eco caiu (imagem da queda). As passagens sobre RO são por volta das 10:00 UTC.
+- **Chuva:** Meteomatics, modelo `mix`, `precip_24h:mm` às 10:00 UTC do dia da passagem e do dia anterior (soma = chuva nas 48 h antes da imagem).
+- **Regra:** chão seco se a chuva em 48 h for menor que 5 mm.
+  - `corte`: seco antes das duas imagens.
+  - `corte_apos_chuva`: choveu perto de alguma imagem, mas houve passagem seca depois e a queda continuou (o detector já exige que a queda persista).
+  - `duvida`: choveu perto e ainda não houve passagem seca depois. No mapa, borda azul; dá para esconder em "Mais filtros".
+- **Resultado (15/11):** dos 31 lugares mostrados, 4 `corte`, 16 `corte_apos_chuva`, 9 `duvida`, 2 sem imagem de antes. Contando os 46 detectados: 8 / 19 / 17 / 2.
+- **Linha do tempo:** média diária de chuva sobre um contorno simplificado de RO, somada por período de 12 dias.
+- **Limites:** chuva de modelo (não de pluviômetro), em ponto; 5 mm é um limite escolhido, não calibrado em campo. A lavoura saiu do site; o detector continua no pipeline.

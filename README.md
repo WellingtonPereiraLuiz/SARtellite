@@ -4,11 +4,13 @@
 
 Equipe **Astrópodes**, NASA Space Apps Challenge 2026 (Vilhena, RO), desafio **Dancing with the SARs**: uma aplicação interativa que usa o radar NISAR (NASA e ISRO) para acompanhar e mostrar mudanças na superfície da Terra.
 
-O SARtellite mostra três mudanças de Rondônia em linguagem simples, num mapa em tela cheia com linha do tempo:
+O SARtellite mostra, em linguagem simples, num mapa em tela cheia com linha do tempo:
 
-1. **Queimadas** (focos de calor do INPE: contexto de quando e onde houve fogo)
-2. **Floresta derrubada** (radar NISAR, polarização HV)
-3. **Lavoura colhida ou plantada** (radar NISAR, polarização HH)
+1. **Floresta derrubada** (radar NISAR, polarização HV)
+2. **Corte ou chuva?** Cada mudança é conferida com a chuva da **Meteomatics** nas 48 h antes de cada imagem, para não dar alarme falso por chão molhado
+3. **Queimadas** (focos de calor do INPE) como contexto
+
+Tese: *No satellite dances alone.* A página "A dança" mostra o caso 1 funcionando e os casos 2 a 8 como próximos passos.
 
 O herói é o NISAR: ele enxerga através de nuvem e fumaça, justamente na seca, quando o fogo e a derrubada acontecem. A narrativa do pitch (El Niño 2026 → Amazônia → Rondônia) está em [PITCH.md](PITCH.md), e **todas as fontes e referências** em [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md).
 
@@ -21,8 +23,9 @@ O herói é o NISAR: ele enxerga através de nuvem e fumaça, justamente na seca
 | Página | O que tem |
 |---|---|
 | **Início** | Frase curta, três números ao vivo (clicáveis), a história em 5 tempos e para quem serve |
-| **Mapa** | Fundo NASA Blue Marble do mundo todo, voo de abertura até RO, camadas Queimadas / Floresta / Lavoura com calor de longe e pontos de perto, busca de municípios, estados e países, filtros, cartão de detalhe com o eco do radar, lista das maiores derrubadas |
-| **Linha do tempo** | O usuário escolhe o que comparar (chips); cada série na própria escala; arrastar escolhe período, duplo clique volta a tudo, botão de reprodução |
+| **Mapa** | Fundo NASA Blue Marble do mundo todo, voo de abertura até RO, camadas Queimadas e Floresta (borda azul = pode ser chuva), calor de longe e pontos de perto, busca de municípios, estados e países, filtros, cartão de detalhe com o eco do radar, lista das maiores derrubadas |
+| **A dança** | Caso 1 "Corte ou chuva?" com números ao vivo; casos 2 a 8 como próximos passos; lacunas do NISAR e quem preenche |
+| **Linha do tempo** | O usuário escolhe o que comparar (Queimadas, Floresta, Chuva); cada série na própria escala; arrastar escolhe período, duplo clique volta a tudo, botão de reprodução |
 | **Fora de RO** | Cartão "Demonstração" com lentes futuras (alagamentos, seca dos rios). Nenhuma mancha falsa no mapa |
 | **Meu painel** | Demonstração: perfil (produtor, prefeitura, comunidade), municípios seguidos com números reais, avisos (em breve), cartão EUDR para o produtor. Fica só no navegador |
 | **Como funciona** | Explicador animado do radar e o que dá e não dá para dizer |
@@ -33,7 +36,7 @@ O herói é o NISAR: ele enxerga através de nuvem e fumaça, justamente na seca
 - **NISAR:** 412 passagens sobre Rondônia, 45 quadros, de 18 jun a 30 out 2026; 280 com polarização HV.
 - **Queimadas:** 28.984 focos (INPE, 17 jun a 7 nov 2026), 47% em floresta.
 - **Floresta:** 46 manchas detectadas; 31 mostradas (11 o INPE também viu, 20 prováveis), somando 586 ha.
-- **Lavoura:** 638 mil ha mudaram (quadrados de 1 km).
+- **Corte ou chuva? (Meteomatics):** dos 31 lugares mostrados, 20 são mudança real (4 sem chuva, 16 confirmados no seco) e 9 podem ser chuva.
 - **Conferência com o DETER:** 11 de 46 manchas (24%) coincidem; pixel a pixel, 11% de precisão perto de corte raso e 2% dos polígonos achados. Motivo: prévia pública de 8 bits e 180 m. Está na página Fontes.
 
 ## Rodar
@@ -41,7 +44,7 @@ O herói é o NISAR: ele enxerga através de nuvem e fumaça, justamente na seca
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # 15 testes: períodos, filtros, queimadas, busca, regras de cautela, linguagem
+npm test           # 17 testes: períodos, filtros, queimadas, busca, regras de cautela, linguagem
 npm run build      # checa tipos e gera dist/
 npm run preview    # http://localhost:4173
 ```
@@ -75,6 +78,7 @@ bash pipeline/rondonia/run_all.sh       # 30 a 40 minutos
 | `r06_detect.py` | Detecção de floresta (HV) e lavoura (HH) + conferência com DETER |
 | `r07_events.py` | Eventos com frase, lugar, certeza, série do radar e pistas |
 | `r08_basemap.py` / `r09_meta.py` | Mapa base, área sem cobertura e resumo |
+| `r11_rain.py` | Caso 1 "Corte ou chuva?": chuva da Meteomatics nas datas das imagens e veredito por lugar |
 | `r10_web.py` | Focos para a web (só dentro dos períodos do NISAR), contornos suaves, busca de lugares, ladrilhos Blue Marble e imagem da capa |
 
 A regra da floresta está em [DATA_PROVENANCE.md](DATA_PROVENANCE.md). A primeira versão (antes e depois em duas áreas, com Sentinel) está em `pipeline/*.py` e `legacy/`, só como histórico.

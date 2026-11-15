@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
-import type { Layer, Period } from '../lib/ro';
+import type { Period, Serie3 } from '../lib/ro';
 import { COLORS } from './MapView';
 
-const META: Record<Layer, { label: string; unit: (v: number) => string; color: string }> = {
+const META: Record<Serie3, { label: string; unit: (v: number) => string; color: string }> = {
   fogo: { label: 'Queimadas', unit: (v) => `${fmtNum(v)} focos`, color: COLORS.fogo },
   floresta: { label: 'Floresta derrubada', unit: (v) => `${fmtNum(v)} ha`, color: COLORS.floresta },
-  lavoura: { label: 'Lavoura', unit: (v) => (v >= 10000 ? `${fmtNum(v / 1000)} mil ha` : `${fmtNum(v)} ha`), color: COLORS.lavoura },
+  chuva: { label: 'Chuva', unit: (v) => `${fmtNum(v)} mm`, color: COLORS.chuva },
 };
 
 interface Props {
   periods: Period[];
-  series: Record<Layer, number[]>;
-  compare: Layer[];
-  onCompare: (l: Layer[]) => void;
+  series: Record<Serie3, number[]>;
+  compare: Serie3[];
+  onCompare: (l: Serie3[]) => void;
   range: [number, number];
   onRange: (r: [number, number]) => void;
   reduce: boolean;
@@ -58,7 +58,7 @@ export default function TimeSeries({ periods, series, compare, onCompare, range,
     }
     return close ? `${d} L${pts[pts.length - 1][0]},${H - bot} L${pts[0][0]},${H - bot} Z` : d;
   };
-  const toggle = (l: Layer) => onCompare(compare.includes(l) ? compare.filter((x) => x !== l) : [...compare, l]);
+  const toggle = (l: Serie3) => onCompare(compare.includes(l) ? compare.filter((x) => x !== l) : [...compare, l]);
   const sel = hover ?? (range[0] === range[1] ? range[0] : null);
   const label = all ? `${fmtDate(periods[0].start)} a ${fmtDate(periods[n - 1].end)}` : `${fmtDate(periods[range[0]].start)} a ${fmtDate(periods[range[1]].end)}`;
 
@@ -72,7 +72,7 @@ export default function TimeSeries({ periods, series, compare, onCompare, range,
         </div>
         <div className="chips" role="group" aria-label="O que comparar">
           <span className="chips-label">Comparar</span>
-          {(Object.keys(META) as Layer[]).map((l) => (
+          {(Object.keys(META) as Serie3[]).map((l) => (
             <button key={l} type="button" className={`chip${compare.includes(l) ? ' on' : ''}`} aria-pressed={compare.includes(l)} onClick={() => toggle(l)} style={{ ['--c' as string]: META[l].color }}>
               <i />{META[l].label}
             </button>

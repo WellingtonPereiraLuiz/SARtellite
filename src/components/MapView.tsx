@@ -1,23 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import maplibregl, { type GeoJSONSource, type Map as MlMap, type StyleSpecification } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import glyphData from '../assets/OpenSansSemibold-0-255.pbf?inline';
-import { dataUrl, type FarmRow, type FireRow, type ForestEvent, type RoData } from '../lib/ro';
+import { dataUrl, type FireRow, type ForestEvent, type RoData } from '../lib/ro';
 
 export type Pick =
   | { kind: 'floresta'; id: string }
-  | { kind: 'lavoura'; row: FarmRow }
   | { kind: 'fogo'; lon: number; lat: number; day: number; forest: boolean }
   | { kind: 'municipio'; id: string }
   | null;
 
-export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', colheita: '#F5C451', plantio: '#9BE15D', lavoura: '#C8E05A' };
+export const COLORS = { fogo: '#FF4D3D', floresta: '#FF9A3D', chuva: '#5FB8FF' };
 export const RO_BOUNDS: [[number, number], [number, number]] = [[-66.85, -13.75], [-59.75, -7.95]];
 
 interface Props {
   data: RoData;
   events: ForestEvent[];
-  farm: FarmRow[];
   fires: FireRow[];
   selectedId: string | null;
   municipio: string | null;
@@ -66,7 +64,6 @@ function style(data: RoData): StyleSpecification {
       munpt: { type: 'geojson', data: fc(data.municipios.map((m) => feat(pt(m.lon, m.lat), { id: m.id, nome: m.nome }))) },
       prot: { type: 'geojson', data: fc(data.protegidas.map((p) => feat({ type: p.gtype, coordinates: p.geometry }, { nome: p.nome, tipo: p.tipo }))) },
       fires: { type: 'geojson', data: fc([]) },
-      farm: { type: 'geojson', data: fc([]) },
       forest: { type: 'geojson', data: fc([]) },
       forestpt: { type: 'geojson', data: fc([]) },
     },
@@ -87,21 +84,6 @@ function style(data: RoData): StyleSpecification {
       { id: 'mun-hit', type: 'fill', source: 'mun', paint: { 'fill-color': '#000', 'fill-opacity': 0 } },
       { id: 'mun-line', type: 'line', source: 'mun', minzoom: 5.5, paint: { 'line-color': '#e6f2f2', 'line-opacity': ['interpolate', ['linear'], ['zoom'], 5.5, 0, 7, 0.22], 'line-width': 0.7 } },
       { id: 'mun-sel', type: 'line', source: 'mun', filter: ['==', ['get', 'id'], ''], paint: { 'line-color': '#ffffff', 'line-width': 2.2, 'line-blur': 0.5 } },
-      // lavoura: brilho suave de longe, pontos de perto
-      {
-        id: 'farm-heat', type: 'heatmap', source: 'farm', maxzoom: 11,
-        paint: {
-          'heatmap-weight': ['interpolate', ['linear'], ['get', 'ha'], 0, 0, 120, 1],
-          'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 5, 0.08, 7, 0.2, 9, 0.5, 11, 1],
-          'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 5, 2, 8, 7, 11, 22],
-          'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0.75, 11, 0],
-          'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'], 0, 'rgba(0,0,0,0)', 0.2, 'rgba(155,225,93,0.22)', 0.6, 'rgba(200,224,90,0.55)', 1, 'rgba(245,196,81,0.85)'],
-        },
-      },
-      {
-        id: 'farm-dot', type: 'circle', source: 'farm', minzoom: 9.5,
-        paint: { 'circle-color': ['match', ['get', 's'], 'colheita', COLORS.colheita, 'plantio', COLORS.plantio, '#d9d08a'], 'circle-radius': ['interpolate', ['exponential', 2], ['zoom'], 9.5, 5, 13, 40], 'circle-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.55], 'circle-blur': 0.35 },
-      },
       // queimadas: calor de longe, focos de perto
       {
         id: 'fire-heat', type: 'heatmap', source: 'fires', maxzoom: 11,
@@ -124,12 +106,12 @@ function style(data: RoData): StyleSpecification {
         paint: {
           'circle-color': COLORS.floresta,
           'circle-radius': ['interpolate', ['linear'], ['zoom'], 5, ['+', 3, ['*', 0.5, ['sqrt', ['get', 'ha']]]], 10, ['+', 6, ['sqrt', ['get', 'ha']]]],
-          'circle-stroke-color': '#ffffff', 'circle-stroke-width': ['case', ['get', 'sel'], 3, ['==', ['get', 'c'], 'confirmado'], 1.8, 0.6],
+          'circle-stroke-color': ['case', ['==', ['get', 'v'], 'duvida'], COLORS.chuva, '#ffffff'], 'circle-stroke-width': ['case', ['get', 'sel'], 3, ['==', ['get', 'v'], 'duvida'], 2.4, ['==', ['get', 'c'], 'confirmado'], 1.8, 0.6],
           'circle-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
           'circle-stroke-opacity': ['interpolate', ['linear'], ['zoom'], 10.5, 1, 11.5, 0],
         },
       },
-      { id: 'forest-fill', type: 'fill', source: 'forest', minzoom: 9.5, paint: { 'fill-color': COLORS.floresta, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.85] } },
+      { id: 'forest-fill', type: 'fill', source: 'forest', minzoom: 9.5, paint: { 'fill-color': ['case', ['==', ['get', 'v'], 'duvida'], COLORS.chuva, COLORS.floresta], 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 0.85] } },
       { id: 'forest-line', type: 'line', source: 'forest', minzoom: 9.5, paint: { 'line-color': '#fff4e8', 'line-width': ['case', ['get', 'sel'], 3, 1], 'line-opacity': ['interpolate', ['linear'], ['zoom'], 9.5, 0, 10.5, 1] } },
       {
         id: 'mun-label', type: 'symbol', source: 'munpt', minzoom: 6.3,
@@ -149,7 +131,6 @@ export default function MapView(p: Props) {
   const latest = useRef(p);
   latest.current = p;
   const usedFocus = useRef(-1);
-  const farmIdx = useMemo(() => new Map(p.data.farm.map((r, i) => [r, i])), [p.data.farm]);
 
   useEffect(() => {
     if (!el.current) return;
@@ -181,16 +162,15 @@ export default function MapView(p: Props) {
       latest.current.onMoveOut(map.getZoom() > 3.5 && (c.lng < x0 - 1.5 || c.lng > x1 + 1.5 || c.lat < y0 - 1.5 || c.lat > y1 + 1.5));
     });
     map.on('click', (e) => {
-      const f = map.queryRenderedFeatures(e.point, { layers: ['forest-fill', 'forest-pt', 'fire-dot', 'farm-dot', 'mun-hit'] });
+      const f = map.queryRenderedFeatures(e.point, { layers: ['forest-fill', 'forest-pt', 'fire-dot', 'mun-hit'] });
       const top = f[0];
       if (!top) return latest.current.onPick(null);
       const pr = top.properties!;
       if (top.layer.id === 'forest-fill' || top.layer.id === 'forest-pt') return latest.current.onPick({ kind: 'floresta', id: String(pr.id) });
       if (top.layer.id === 'fire-dot') { const g = top.geometry as unknown as { coordinates: [number, number] }; return latest.current.onPick({ kind: 'fogo', lon: g.coordinates[0], lat: g.coordinates[1], day: Number(pr.d), forest: Number(pr.f) === 1 }); }
-      if (top.layer.id === 'farm-dot') return latest.current.onPick({ kind: 'lavoura', row: latest.current.farm[Number(pr.i)] });
       latest.current.onPick({ kind: 'municipio', id: String(pr.id) });
     });
-    for (const id of ['forest-fill', 'forest-pt', 'fire-dot', 'farm-dot']) {
+    for (const id of ['forest-fill', 'forest-pt', 'fire-dot']) {
       map.on('mouseenter', id, () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', id, () => { map.getCanvas().style.cursor = ''; });
     }
@@ -203,14 +183,9 @@ export default function MapView(p: Props) {
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
-    (map.getSource('forest') as GeoJSONSource).setData(fc(p.events.map((e) => feat({ type: e.gtype, coordinates: e.geometry }, { id: e.id, c: e.certeza, sel: e.id === p.selectedId }))));
-    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat(pt(e.lon, e.lat), { id: e.id, c: e.certeza, ha: e.area_ha, sel: e.id === p.selectedId }))));
+    (map.getSource('forest') as GeoJSONSource).setData(fc(p.events.map((e) => feat({ type: e.gtype, coordinates: e.geometry }, { id: e.id, c: e.certeza, v: e.chuva?.veredito ?? '', sel: e.id === p.selectedId }))));
+    (map.getSource('forestpt') as GeoJSONSource).setData(fc(p.events.map((e) => feat(pt(e.lon, e.lat), { id: e.id, c: e.certeza, v: e.chuva?.veredito ?? '', ha: e.area_ha, sel: e.id === p.selectedId }))));
   }, [ready, p.events, p.selectedId]);
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!ready || !map) return;
-    (map.getSource('farm') as GeoJSONSource).setData(fc(p.farm.map((r) => feat(pt(r[0], r[1]), { i: farmIdx.get(r) ?? 0, s: r[5], ha: r[4] }))));
-  }, [ready, p.farm, farmIdx]);
   useEffect(() => {
     const map = mapRef.current;
     if (!ready || !map) return;
@@ -232,7 +207,7 @@ export default function MapView(p: Props) {
   }, [ready, p.focus, p.reduce]);
 
   return (
-    <div className="map" ref={el} role="region" aria-label="Mapa com queimadas, floresta derrubada e lavouras em Rondônia">
+    <div className="map" ref={el} role="region" aria-label="Mapa com queimadas e floresta derrubada em Rondônia">
       {err && <p className="map-msg" role="alert">O mapa não pôde ser iniciado ({err}). A lista e os números continuam funcionando.</p>}
     </div>
   );

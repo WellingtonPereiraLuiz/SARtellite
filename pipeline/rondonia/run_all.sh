@@ -15,3 +15,4 @@ python r07_events.py            # eventos, células de lavoura, municípios, per
 python r08_basemap.py           # mapa base e área sem cobertura
 python r09_meta.py              # resumo para as páginas Fontes e Sobre
 python r10_web.py              # versão web: focos, contornos suaves, busca, fundo Blue Marble e imagem de capa
+python r11_rain.py             # caso 1 "Corte ou chuva?": chuva da Meteomatics nas datas das imagens NISAR

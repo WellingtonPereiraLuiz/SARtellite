@@ -3,6 +3,19 @@
 Equipe Astrópodes · NASA Space Apps Challenge 2026 · Vilhena, RO · Dancing with the SARs
 Fontes de cada frase: [FONTES_E_REFERENCIAS.md](FONTES_E_REFERENCIAS.md) (seção 2).
 
+> **Atualização 15/11, manhã:** a narrativa ativa é a v3, *"No satellite dances alone"* (gancho humano → NISAR revolução → lacunas → a dança → demo → próximas danças). A lavoura saiu; entrou o caso 1 **"Corte ou chuva?"** (NISAR + Meteomatics). O roteiro El Niño abaixo continua valendo como contexto do gancho.
+
+## Demo do caso 1 "Corte ou chuva?" (50 s)
+
+| Tempo | Ação | Fala |
+|---|---|---|
+| 0 a 10 s | Aba **A dança**, cartão 1. | "Sozinho, o NISAR não sabe se o eco mudou por tronco caído ou por chão molhado. Sozinha, a API de chuva não enxerga nem um graveto." |
+| 10 a 25 s | Apontar os números: 29 conferidos, 20 mudança real, 9 pode ser chuva. | "Juntos: 20 mudanças confirmadas e 9 que a gente segura até a próxima passagem seca." |
+| 25 a 40 s | **Ver no mapa** → clicar no lugar de 26 ha em Candeias do Jamari. | "Choveu 93 mm antes da imagem de antes; a queda continuou no seco. É corte, e o INPE também viu." |
+| 40 a 50 s | Linha do tempo com Floresta + Chuva. | "A chuva volta em setembro; é aí que o filtro mais trabalha." |
+
+Números de 15/11 (`meta.json` → chuva). Antes de falar, confira na tela.
+
 ## Em uma frase
 
 Queimadas, floresta derrubada e lavouras em Rondônia, vistas pelo radar NISAR mesmo debaixo de nuvem e fumaça, numa linguagem que uma criança entende.
