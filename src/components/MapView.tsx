@@ -41,7 +41,7 @@ maplibregl.addProtocol('sarfont', async (req) => {
   return { data: glyphBytes.slice(0) };
 });
 
-const pad = () => (window.innerWidth < 760 ? { top: 250, bottom: 250, left: 20, right: 20 } : { top: 90, bottom: 200, left: 400, right: 60 });
+const pad = (sheet = false) => (window.innerWidth < 760 ? { top: sheet ? 40 : 110, bottom: Math.round(window.innerHeight * (sheet ? 0.66 : 0.3)), left: 24, right: 24 } : { top: 90, bottom: 200, left: 400, right: 60 });
 const fc = (features: unknown[]) => ({ type: 'FeatureCollection' as const, features });
 const feat = (geometry: unknown, properties: Record<string, unknown>) => ({ type: 'Feature' as const, geometry, properties });
 const pt = (lon: number, lat: number) => ({ type: 'Point', coordinates: [lon, lat] });
@@ -169,6 +169,9 @@ export default function MapView(p: Props) {
     map.on('load', () => {
       mapRef.current = map;
       setReady(true);
+      // créditos começam recolhidos (o "i" abre), para não cobrir o mapa
+      const at = map.getContainer().querySelector('.maplibregl-ctrl-attrib');
+      at?.classList.remove('maplibregl-compact-show'); at?.removeAttribute('open');
       // abertura: do continente até Rondônia
       const f = latest.current.focus;
       usedFocus.current = f?.n ?? -1;
@@ -235,7 +238,7 @@ export default function MapView(p: Props) {
     const map = mapRef.current;
     if (!ready || !map || !p.focus || p.focus.n === usedFocus.current) return;
     usedFocus.current = p.focus.n;
-    map.fitBounds(p.focus.bounds, { padding: pad(), maxZoom: p.focus.max ?? 11.5, duration: p.reduce ? 0 : 2200, curve: 1.5, essential: true });
+    map.fitBounds(p.focus.bounds, { padding: pad(true), maxZoom: p.focus.max ?? 11.5, duration: p.reduce ? 0 : 2200, curve: 1.5, essential: true });
   }, [ready, p.focus, p.reduce]);
 
   return (

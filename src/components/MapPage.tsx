@@ -65,7 +65,12 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
     go([[e.lon - 0.12, e.lat - 0.12], [e.lon + 0.12, e.lat + 0.12]], 12);
   };
   // ao clicar num evento, a linha do tempo abre junto com o cartão
-  useEffect(() => { if (pick && pick.kind !== 'municipio') setTsOpen(true); }, [pick]);
+  // no celular o cartão vira uma folha que sobe de baixo: fecha o painel e não abre a linha do tempo por cima
+  useEffect(() => {
+    if (!pick) return;
+    if (window.matchMedia('(max-width: 760px)').matches) { setPanelOpen(false); setSearchOpen(false); }
+    else if (pick.kind !== 'municipio') setTsOpen(true);
+  }, [pick]);
   const selected = pick?.kind === 'floresta' ? data.events.find((e) => e.id === pick.id) : undefined;
   const rank = { confirmado: 0, provavel: 1, possivel: 2 } as const;
   const top = [...events].sort((a, b) => rank[a.certeza] - rank[b.certeza] || b.area_ha - a.area_ha).slice(0, 6);
@@ -77,7 +82,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   ];
 
   return (
-    <div className={`mapage${tsOpen ? '' : ' ts-off'}`}>
+    <div className={`mapage${tsOpen ? '' : ' ts-off'}${pick ? ' has-pick' : ''}`}>
       <MapView
         data={data} events={events} fires={fires} selectedId={selected?.id ?? null} municipio={filters.municipio}
         showProtegidas={showProt} showTerreno={terreno} showNoCoverage={filters.layers.floresta && terreno} reduce={reduce} focus={focus}
@@ -169,6 +174,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
 
       {pick && (
         <div className="drawer">
+          <span className="grab" aria-hidden="true" />
           {pick.kind === 'floresta' && selected && <ForestDetail e={selected} chip={data.chips[selected.id]} onClose={() => setPick(null)} />}
           {pick.kind === 'fogo' && <FireDetail day={pick.day} hour={pick.hour} forest={pick.forest} start={data.periods[0].start} onClose={() => setPick(null)} />}
           {pick.kind === 'municipio' && (() => { const m = data.municipios.find((x) => x.id === pick.id); return m ? <MunDetail m={m} focos={munFocos(m.id)} filtered={filters.municipio === m.id} onFilter={() => { setMun(filters.municipio === m.id ? null : m.id); setPick(null); }} onClose={() => setPick(null)} /> : null; })()}

@@ -9,8 +9,14 @@ const Fontes = lazy(() => import('./components/Pages').then((m) => ({ default: m
 const Danca = lazy(() => import('./components/Danca'));
 
 type View = 'inicio' | 'mapa' | 'danca' | 'perfil' | 'como-funciona' | 'fontes';
-const VIEWS: { id: View; label: string }[] = [
-  { id: 'inicio', label: 'Início' }, { id: 'mapa', label: 'Mapa' }, { id: 'danca', label: 'A dança' }, { id: 'perfil', label: 'Meu painel' }, { id: 'como-funciona', label: 'Como funciona' }, { id: 'fontes', label: 'Fontes' },
+// ícone de cada aba (aparece na barra de baixo do celular)
+const VIEWS: { id: View; label: string; curto: string; d: string }[] = [
+  { id: 'inicio', label: 'Início', curto: 'Início', d: 'M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z' },
+  { id: 'mapa', label: 'Mapa', curto: 'Mapa', d: 'M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zm0 0v14m6-12v14' },
+  { id: 'danca', label: 'A dança', curto: 'Dança', d: 'M12 12m-3 0a3 3 0 1 0 6 0a3 3 0 1 0-6 0M3 12a9 9 0 0 1 9-9m9 9a9 9 0 0 1-9 9' },
+  { id: 'perfil', label: 'Meu painel', curto: 'Painel', d: 'M4 13h6V4H4zm10 7h6V4h-6zM4 20h6v-3H4z' },
+  { id: 'como-funciona', label: 'Como funciona', curto: 'Como', d: 'M5 5h4v4H5zm10 0h4v4h-4zM10 15h4v4h-4zM9 7h6m-3 2v6' },
+  { id: 'fontes', label: 'Fontes', curto: 'Fontes', d: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h7' },
 ];
 const viewFromHash = (): View => VIEWS.find((v) => `#${v.id}` === location.hash)?.id ?? 'inicio';
 const ALL: Record<Layer, boolean> = { fogo: true, floresta: true };
@@ -53,7 +59,7 @@ export default function App() {
           <span>SARtellite</span>
         </button>
         <div className="tabs">
-          {VIEWS.map((v) => <button key={v.id} type="button" className={view === v.id ? 'on' : ''} aria-current={view === v.id ? 'page' : undefined} onClick={() => go(v.id)}>{v.label}</button>)}
+          {VIEWS.map((v) => <button key={v.id} type="button" className={view === v.id ? 'on' : ''} aria-current={view === v.id ? 'page' : undefined} onClick={() => go(v.id)}><svg className="tab-ic" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={v.d} /></svg><span className="tab-l">{v.label}</span><span className="tab-s" aria-hidden="true">{v.curto}</span></button>)}
         </div>
         <button type="button" className="round motion" aria-pressed={reduce} onClick={() => setReduce((r) => !r)} title={reduce ? 'Movimento reduzido' : 'Reduzir movimento'} aria-label="Reduzir movimento">{reduce ? '◼' : '◉'}</button>
       </nav>
