@@ -18,6 +18,9 @@ export interface S1 {
   imagens: number; orbitas: number; base_nisar: string; queda_nisar: string; alerta: string | null; dias_antes?: number;
   revisita_dias: number | null; revisita_juntos_dias: number | null; serie: [string, number][];
 }
+/** Foto de perto do Sentinel-2 (cor verdadeira, 10 m) de cada lugar, depois da queda. */
+export interface Chip { img: string; corners: [number, number][]; data: string; nuvem: number }
+export interface S2Mosaic { image: string; corners: [number, number][]; res_m: number; periodo: string; cenas: number; fonte: string }
 export interface Rain { fonte: string; modelo: string; parametro: string; limite_mm: number; daily: [string, number][]; periods: number[] }
 
 export interface Serie { frame: string; dates: string[]; here: (number | null)[]; around: (number | null)[] }
@@ -45,7 +48,7 @@ export interface Meta {
   chuva?: { fonte: string; modelo: string; limite_mm: number; corte: number; corte_apos_chuva: number; duvida: number; sem_dado: number; url: string };
 }
 export interface RoData {
-  events: ForestEvent[]; fires: FireRow[]; rain: Rain | null; fireMun: string[]; municipios: Municipio[]; protegidas: Protegida[];
+  events: ForestEvent[]; fires: FireRow[]; rain: Rain | null; chips: Record<string, Chip>; s2: S2Mosaic | null; fireMun: string[]; municipios: Municipio[]; protegidas: Protegida[];
   periods: Period[]; places: Place[]; meta: Meta;
   landcover: { image: string; corners: [number, number][]; year: string; nocoverage: string; nocoverage_share: number };
 }
@@ -61,7 +64,7 @@ async function getJson<T>(path: string): Promise<T> {
 }
 
 export async function loadRo(): Promise<RoData> {
-  const [events, rain, fires, places, periods, landcover, meta, gaz] = await Promise.all([
+  const [events, rain, fires, places, periods, landcover, meta, gaz, chips, s2] = await Promise.all([
     getJson<ForestEvent[]>('ro/events.json'),
     getJson<Rain>('ro/rain.json').catch(() => null),
     getJson<{ rows: FireRow[]; mun_ids: string[] }>('ro/fires.json'),
@@ -70,8 +73,10 @@ export async function loadRo(): Promise<RoData> {
     getJson<RoData['landcover']>('ro/landcover.json'),
     getJson<Meta>('ro/meta.json'),
     getJson<Place[]>('ro/gazetteer.json'),
+    getJson<Record<string, Chip>>('ro/s2/index.json').catch(() => ({})),
+    getJson<S2Mosaic>('ro/s2_ro.json').catch(() => null),
   ]);
-  return { events, rain, fires: fires.rows, fireMun: fires.mun_ids, municipios: places.municipios, protegidas: places.protegidas, periods: periods.periods, landcover, meta, places: gaz };
+  return { events, rain, chips, s2, fires: fires.rows, fireMun: fires.mun_ids, municipios: places.municipios, protegidas: places.protegidas, periods: periods.periods, landcover, meta, places: gaz };
 }
 
 // ---------------------------------------------------------------- filtros

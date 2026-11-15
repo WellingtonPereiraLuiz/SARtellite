@@ -504,3 +504,74 @@ th { color: var(--muted); font-weight: 500; font-size: 12.5px; }
 .d-tabs button i { width: 8px; height: 8px; border-radius: 50%; }
 .d-tabs button.on { background: rgba(255, 255, 255, 0.1); color: var(--text); }
 .d-tabs button:disabled { opacity: 0.35; cursor: default; }
+
+/* ---------- como funciona: siga um lugar ---------- */
+.cf-pick { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cf-pick label { font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.cf-pick select { background: rgba(255, 255, 255, 0.07); border: 1px solid var(--edge); border-radius: 10px; padding: 8px 10px; color: var(--text); color-scheme: dark; }
+.cf-steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; counter-reset: none; }
+.cf-steps button { width: 100%; text-align: left; display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; background: var(--glass); border: 1px solid var(--edge); border-radius: 14px; padding: 10px 12px; cursor: pointer; color: var(--muted); transition: all 0.25s var(--ease); }
+.cf-steps .n { grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: rgba(255, 255, 255, 0.08); font-family: var(--mono); font-size: 13px; color: var(--text); }
+.cf-steps b { color: var(--text); font-size: 14px; }
+.cf-steps small { font-size: 12px; }
+.cf-steps button.on { border-color: var(--accent); background: linear-gradient(160deg, rgba(127, 227, 255, 0.14), var(--glass)); }
+.cf-steps button.on .n { background: var(--accent); color: var(--accent-ink); }
+.cf-steps button.done .n { background: rgba(155, 225, 93, 0.25); color: #c8f0a8; }
+.cf-stage { padding: 20px; display: grid; gap: 16px; min-height: 420px; animation: rise 0.5s var(--ease) both; }
+.cf-two { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 22px; align-items: center; }
+.cf-text h2 { font-size: 24px; margin-bottom: 10px; }
+.cf-text p { color: #d3e0e0; }
+.cf-photo { position: relative; margin: 0; border-radius: 14px; overflow: hidden; aspect-ratio: 1; max-width: 480px; }
+.cf-photo img { width: 100%; height: 100%; object-fit: cover; display: block; image-rendering: auto; }
+.cf-photo svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cf-poly { fill: rgba(255, 154, 61, 0.18); stroke: #ff9a3d; stroke-width: 2.5; stroke-linejoin: round; filter: drop-shadow(0 0 6px rgba(255, 154, 61, 0.8)); }
+.cf-photo figcaption { position: absolute; left: 8px; bottom: 8px; background: rgba(5, 11, 16, 0.75); padding: 3px 8px; border-radius: 6px; font-size: 12px; color: #d3e0e0; }
+.cf-chart { width: 100%; height: auto; display: block; }
+.cf-grid { stroke: rgba(255, 255, 255, 0.07); }
+.cf-ax { fill: var(--muted); font-size: 11px; font-family: var(--mono); }
+.cf-mk { font-size: 11px; font-weight: 600; }
+.cf-here { fill: none; stroke: #ff9a3d; stroke-width: 3; stroke-linejoin: round; }
+.cf-around { fill: none; stroke: #8fb3bd; stroke-width: 2; stroke-dasharray: 5 4; }
+.cf-dot { fill: #ff9a3d; stroke: #fff; stroke-width: 2; }
+.cf-dot2 { fill: #8fb3bd; }
+.cf-ctrl { display: flex; align-items: center; gap: 12px; margin-top: 8px; }
+.cf-ctrl input { flex: 1; accent-color: #ff9a3d; }
+.cf-ctrl span { font-family: var(--mono); font-size: 13px; color: var(--muted); min-width: 92px; }
+.cf-big { display: grid; grid-template-columns: auto auto; gap: 2px 14px; align-items: baseline; margin-bottom: 12px; }
+.cf-big span { color: var(--muted); font-size: 13px; }
+.cf-big b { font-family: var(--display); font-stretch: 112%; font-size: 40px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cf-big b.muted { color: #8fb3bd; font-size: 28px; }
+.cf-alert { color: #ffcf9a !important; font-weight: 500; }
+.cf-rain { display: flex; align-items: flex-end; gap: 30px; position: relative; padding: 10px 10px 0; min-height: 260px; }
+.cf-rb { display: grid; justify-items: center; gap: 6px; text-align: center; }
+.cf-rb .cf-col { width: 70px; height: 190px; border-radius: 10px; background: rgba(255, 255, 255, 0.05); display: flex; align-items: flex-end; overflow: hidden; }
+.cf-rb .cf-col i { width: 100%; background: #9fb3b8; border-radius: 10px 10px 0 0; transition: height 0.8s var(--ease); min-height: 3px; }
+.cf-rb .cf-col i.wet { background: linear-gradient(#9fd3ff, #5fb8ff); box-shadow: 0 0 18px rgba(95, 184, 255, 0.6); }
+.cf-rb b { font-family: var(--display); font-size: 22px; }
+.cf-rb span { color: var(--muted); font-size: 12.5px; }
+.cf-lim { position: absolute; left: 0; right: 0; bottom: 120px; border-top: 1px dashed rgba(95, 184, 255, 0.5); }
+.cf-lim span { position: absolute; right: 0; top: -18px; font-size: 11px; color: #9fd3ff; }
+.cf-end ul { list-style: none; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }
+.cf-end li { display: grid; grid-template-columns: 12px 140px 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); animation: rise 0.4s var(--ease) both; }
+.cf-end li:nth-child(2) { animation-delay: 0.08s; } .cf-end li:nth-child(3) { animation-delay: 0.16s; } .cf-end li:nth-child(4) { animation-delay: 0.24s; } .cf-end li:nth-child(5) { animation-delay: 0.32s; }
+.cf-end li i { width: 12px; height: 12px; border-radius: 50%; }
+.cf-end li span { color: #d3e0e0; }
+.cf-end li em { font-style: normal; font-size: 18px; color: #9be15d; }
+.cf-verdict { font-family: var(--display); font-stretch: 112%; font-size: 24px; margin: 6px 0; }
+.cf-nav { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--edge); padding-top: 14px; color: var(--muted); font-size: 13px; }
+.cf-nav .btn:disabled { opacity: 0.35; cursor: default; }
+@media (max-width: 860px) {
+  .cf-steps { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+  .cf-steps button { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 8px 4px; }
+  .cf-steps .n { grid-row: auto; }
+  .cf-steps small, .cf-steps b { display: none; }
+  .cf-two { grid-template-columns: 1fr; }
+  .cf-end li { grid-template-columns: 12px 1fr auto; }
+  .cf-end li span { grid-column: 2; }
+}
+
+.d-photo { position: relative; margin: 0; border-radius: 12px; overflow: hidden; aspect-ratio: 16 / 9; }
+.d-photo img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.35); }
+.d-photo svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: scale(1.35); }
+.d-photo polygon { fill: rgba(255, 154, 61, 0.15); stroke: #ff9a3d; stroke-width: 0.6; vector-effect: non-scaling-stroke; stroke-width: 2; }
+.d-photo figcaption { position: absolute; left: 6px; bottom: 6px; font-size: 11px; background: rgba(5, 11, 16, 0.75); padding: 2px 7px; border-radius: 6px; color: #d3e0e0; }

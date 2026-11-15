@@ -19,7 +19,7 @@ const LENSES = [
   { t: 'Queimadas e floresta', d: 'O mesmo que hoje fazemos em Rondônia, para qualquer lugar coberto pelo NISAR.' },
 ];
 
-export default function MapPage({ data, filters, setFilters, reduce, jump }: { data: RoData; filters: Filters; setFilters: (f: (x: Filters) => Filters) => void; reduce: boolean; jump: { id: string | null; n: number } }) {
+export default function MapPage({ data, filters, setFilters, reduce, jump }: { data: RoData; filters: Filters; setFilters: (f: (x: Filters) => Filters) => void; reduce: boolean; jump: { id: string | null; n: number; ev?: boolean } }) {
   const [pick, setPick] = useState<Pick>(null);
   const [focus, setFocus] = useState<{ bounds: Bounds; n: number; max?: number } | null>(null);
   const [q, setQ] = useState('');
@@ -27,7 +27,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   const [movedOut, setMovedOut] = useState(false);
   const [more, setMore] = useState(false);
   const [showProt, setShowProt] = useState(false);
-  const [terreno, setTerreno] = useState(true);
+  const [terreno, setTerreno] = useState(false);
   const [compare, setCompare] = useState<Serie3[]>(['floresta', 'chuva']);
   const [listOpen, setListOpen] = useState(true);
   const [panelOpen, setPanelOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
     go([[p.b[0], p.b[1]], [p.b[2], p.b[3]]], 7);
   };
   useEffect(() => {
-    if (jump.n > 0) { setOutside(null); setMovedOut(false); setPick(null); setMun(jump.id); }
+    if (jump.n > 0) { setOutside(null); setMovedOut(false); setPick(null); if (jump.ev && jump.id) { setTsOpen(true); openEvent(jump.id); } else setMun(jump.id); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jump.n]);
   const toggle = (l: Layer) => setFilters((f) => ({ ...f, layers: { ...f.layers, [l]: !f.layers[l] } }));
@@ -143,7 +143,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
             <label className="sw-row" htmlFor="o-so"><input id="o-so" type="checkbox" checked={filters.soProtegidas} onChange={(e) => { setFilters((f) => ({ ...f, soProtegidas: e.target.checked })); if (e.target.checked) setShowProt(true); }} /> Só floresta dentro delas</label>
             {data.rain && <label className="sw-row" htmlFor="o-du"><input id="o-du" type="checkbox" checked={!filters.duvidas} onChange={(e) => setFilters((f) => ({ ...f, duvidas: !e.target.checked }))} /> Esconder o que pode ser chuva</label>}
             <label className="sw-row" htmlFor="o-fr"><input id="o-fr" type="checkbox" checked={filters.fracos} onChange={(e) => setFilters((f) => ({ ...f, fracos: e.target.checked }))} /> Sinais fracos de floresta</label>
-            <label className="sw-row" htmlFor="o-ter"><input id="o-ter" type="checkbox" checked={terreno} onChange={(e) => setTerreno(e.target.checked)} /> Cores do terreno</label>
+            <label className="sw-row" htmlFor="o-ter"><input id="o-ter" type="checkbox" checked={terreno} onChange={(e) => setTerreno(e.target.checked)} /> Classes do terreno (floresta, pasto, lavoura)</label>
           </div>
         )}
 
@@ -169,7 +169,7 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
 
       {pick && (
         <div className="drawer">
-          {pick.kind === 'floresta' && selected && <ForestDetail e={selected} onClose={() => setPick(null)} />}
+          {pick.kind === 'floresta' && selected && <ForestDetail e={selected} chip={data.chips[selected.id]} onClose={() => setPick(null)} />}
           {pick.kind === 'fogo' && <FireDetail day={pick.day} hour={pick.hour} forest={pick.forest} start={data.periods[0].start} onClose={() => setPick(null)} />}
           {pick.kind === 'municipio' && (() => { const m = data.municipios.find((x) => x.id === pick.id); return m ? <MunDetail m={m} focos={munFocos(m.id)} filtered={filters.municipio === m.id} onFilter={() => { setMun(filters.municipio === m.id ? null : m.id); setPick(null); }} onClose={() => setPick(null)} /> : null; })()}
         </div>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { fmtDate, fmtNum } from '../lib/time';
-import { campos, CERTEZA, VEREDITO, type Chuva, type ForestEvent, type Municipio, type S1, type Serie } from '../lib/ro';
+import { campos, CERTEZA, dataUrl, VEREDITO, type Chip, type Chuva, type ForestEvent, type Municipio, type S1, type Serie } from '../lib/ro';
 import { COLORS } from './MapView';
 
 function Spark({ s, mark }: { s: Serie; mark: string }) {
@@ -96,6 +96,21 @@ function Shell({ tag, color, title, onClose, children }: { tag: string; color: s
   );
 }
 
+function Photo({ e, chip }: { e: ForestEvent; chip: Chip }) {
+  const [[x0, y1], [x1], , [, y0]] = chip.corners;
+  const g = e.geometry as number[][][] | number[][][][];
+  const rings = (e.gtype === 'Polygon' ? [(g as number[][][])[0]] : e.gtype === 'MultiPolygon' ? (g as number[][][][]).map((p) => p[0]) : []) as number[][][];
+  return (
+    <figure className="d-photo">
+      <img src={dataUrl(chip.img)} alt={`Foto do Sentinel-2 de ${fmtDate(chip.data)}`} />
+      <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        {rings.map((r, i) => <polygon key={i} points={r.map(([lo, la]) => `${(((lo - x0) / (x1 - x0)) * 100).toFixed(2)},${(((y1 - la) / (y1 - y0)) * 100).toFixed(2)}`).join(' ')} />)}
+      </svg>
+      <figcaption>Foto real · Sentinel-2 · {fmtDate(chip.data, false)}</figcaption>
+    </figure>
+  );
+}
+
 function Dancas({ e }: { e: ForestEvent }) {
   const has1 = !!e.chuva, has2 = !!(e.s1 && e.s1.serie.length > 2);
   const [tab, setTab] = useState<1 | 2>(has1 ? 1 : 2);
@@ -112,7 +127,7 @@ function Dancas({ e }: { e: ForestEvent }) {
   );
 }
 
-export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => void }) {
+export function ForestDetail({ e, chip, onClose }: { e: ForestEvent; chip?: Chip; onClose: () => void }) {
   const c = CERTEZA[e.certeza];
   return (
     <Shell tag={c.label} color={COLORS.floresta} title={`${fmtNum(e.area_ha)} ha de floresta derrubada`} onClose={onClose}>
@@ -121,6 +136,7 @@ export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => vo
         <li><span>Quando</span>NISAR, {fmtDate(e.date)}</li>
         <li><span>Tamanho</span>{fmtNum(campos(e.area_ha))} campos de futebol</li>
       </ul>
+      {chip && <Photo e={e} chip={chip} />}
       {e.serie && <Spark s={e.serie} mark={e.date} />}
       <Dancas e={e} />
       <div className="clues">

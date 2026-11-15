@@ -4,7 +4,7 @@ import MapPage from './components/MapPage';
 import { loadRo, type Filters, type Layer, type RoData } from './lib/ro';
 
 const Profile = lazy(() => import('./components/Profile'));
-const Como = lazy(() => import('./components/Pages').then((m) => ({ default: m.Como })));
+const ComoFunciona = lazy(() => import('./components/ComoFunciona'));
 const Fontes = lazy(() => import('./components/Pages').then((m) => ({ default: m.Fontes })));
 const Danca = lazy(() => import('./components/Danca'));
 
@@ -21,7 +21,7 @@ export default function App() {
   const [view, setView] = useState<View>(viewFromHash);
   const [mapSeen, setMapSeen] = useState(view === 'mapa');
   const [filters, setFilters] = useState<Filters>({ range: [0, 0], hours: [0, 24], municipio: null, layers: ALL, fracos: false, soProtegidas: false, duvidas: true });
-  const [jump, setJump] = useState<{ id: string | null; n: number }>({ id: null, n: 0 });
+  const [jump, setJump] = useState<{ id: string | null; n: number; ev?: boolean }>({ id: null, n: 0 });
   const [reduce, setReduce] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false);
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function App() {
             )}
             <Suspense fallback={<div className="loading"><span className="pulse" /></div>}>
               {view === 'perfil' && <Profile data={data} onOpenMun={(id) => { setFilters((f) => ({ ...f, layers: ALL })); setJump((j) => ({ id, n: j.n + 1 })); go('mapa'); }} />}
-              {view === 'como-funciona' && <Como data={data} reduce={reduce} onMap={() => openMap()} />}
+              {view === 'como-funciona' && <ComoFunciona data={data} onMap={(id) => { setFilters((f) => ({ ...f, layers: ALL, fracos: true, duvidas: true })); setJump((j) => ({ id, n: j.n + 1, ev: true })); go('mapa'); }} />}
               {view === 'fontes' && <Fontes data={data} />}
               {view === 'danca' && <Danca data={data} onMap={() => openMap('floresta')} />}
             </Suspense>

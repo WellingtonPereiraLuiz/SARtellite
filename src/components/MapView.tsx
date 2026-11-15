@@ -46,7 +46,11 @@ const fc = (features: unknown[]) => ({ type: 'FeatureCollection' as const, featu
 const feat = (geometry: unknown, properties: Record<string, unknown>) => ({ type: 'Feature' as const, geometry, properties });
 const pt = (lon: number, lat: number) => ({ type: 'Point', coordinates: [lon, lat] });
 
+type Quad = [[number, number], [number, number], [number, number], [number, number]];
 function style(data: RoData): StyleSpecification {
+  const s2src: Record<string, unknown> = data.s2 ? { s2: { type: 'image', url: dataUrl(data.s2.image), coordinates: data.s2.corners as Quad } } : {};
+  const s2layers = data.s2 ? [{ id: 's2', type: 'raster', source: 's2', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 4.2, 0, 5.4, 1], 'raster-resampling': 'linear', 'raster-contrast': 0.12, 'raster-saturation': 0.1, 'raster-fade-duration': 0 } }] : [];
+
   const tiles = [`${dataUrl('tiles/bm')}/{z}/{x}/{y}.jpg`];
   const bm = { 'raster-saturation': -0.15, 'raster-brightness-max': 0.72, 'raster-contrast': 0.1, 'raster-fade-duration': 300 };
   const lc = data.landcover.corners as [[number, number], [number, number], [number, number], [number, number]];
@@ -63,6 +67,7 @@ function style(data: RoData): StyleSpecification {
       mun: { type: 'geojson', data: fc(data.municipios.map((m) => feat({ type: m.gtype, coordinates: m.geometry }, { id: m.id, nome: m.nome }))) },
       munpt: { type: 'geojson', data: fc(data.municipios.map((m) => feat(pt(m.lon, m.lat), { id: m.id, nome: m.nome }))) },
       prot: { type: 'geojson', data: fc(data.protegidas.map((p) => feat({ type: p.gtype, coordinates: p.geometry }, { nome: p.nome, tipo: p.tipo }))) },
+      ...s2src,
       fires: { type: 'geojson', data: fc([]) },
       forest: { type: 'geojson', data: fc([]) },
       forestpt: { type: 'geojson', data: fc([]) },
@@ -72,6 +77,7 @@ function style(data: RoData): StyleSpecification {
       { id: 'w', type: 'raster', source: 'w', paint: bm },
       { id: 'sa', type: 'raster', source: 'sa', paint: bm },
       { id: 'ro', type: 'raster', source: 'ro', paint: bm },
+      ...(s2layers as StyleSpecification['layers']),
       { id: 'countries', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'country'], paint: { 'line-color': '#9ab7c0', 'line-opacity': 0.35, 'line-width': 0.7 } },
       { id: 'states', type: 'line', source: 'base', filter: ['==', ['get', 'k'], 'state'], minzoom: 3, paint: { 'line-color': '#9ab7c0', 'line-opacity': 0.3, 'line-width': 0.7 } },
       { id: 'lc', type: 'raster', source: 'lc', paint: { 'raster-opacity': ['interpolate', ['linear'], ['zoom'], 4.5, 0, 6, 0.5, 9.5, 0.45, 11.5, 0.15], 'raster-resampling': 'linear', 'raster-fade-duration': 0, 'raster-opacity-transition': { duration: 500 } } },
