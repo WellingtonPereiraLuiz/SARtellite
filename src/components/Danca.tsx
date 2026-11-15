@@ -1,6 +1,6 @@
 import { fmtNum } from '../lib/time';
 import { haTxt, type RoData } from '../lib/ro';
-import { CorteOuChuva } from './Detail';
+import { AlertaDuasEtapas, CorteOuChuva } from './Detail';
 
 interface Caso { n: number; t: string; par: string; ida: [string, string]; volta: [string, string]; juntos: string; ativo?: boolean }
 
@@ -9,9 +9,9 @@ const CASOS: Caso[] = [
     ida: ['NISAR → clima', 'a API de chuva não enxerga nem um graveto; o NISAR vê a floresta'],
     volta: ['Meteomatics → NISAR', 'diz se o eco mudou por solo molhado ou por tronco caído'],
     juntos: 'mudança real, sem falso alarme de chuva' },
-  { n: 2, t: 'Alerta em 2 etapas', par: 'NISAR × Sentinel-1 (+ FIRMS)',
+  { n: 2, t: 'Alerta em 2 etapas', par: 'NISAR × Sentinel-1 (+ focos de calor)', ativo: true,
     ida: ['NISAR → Sentinel-1', 'a banda C só vê a copa; o NISAR confirma que o tronco sumiu'],
-    volta: ['Sentinel-1 → NISAR', 'passa mais vezes e avisa antes dos 12 dias'],
+    volta: ['Sentinel-1 → NISAR', 'passa em outros dias: juntos, uma imagem a cada ~7 dias, e o aviso chega antes'],
     juntos: 'alerta rápido e confirmado; o FIRMS diz se queimou' },
   { n: 3, t: 'Floresta alagada', par: 'NISAR × SWOT / ANA',
     ida: ['NISAR → SWOT/ANA', 'vê a água escondida debaixo da copa'],
@@ -74,6 +74,11 @@ export default function Danca({ data, onMap }: { data: RoData; onMap: () => void
   const ok = com.filter((e) => e.chuva!.veredito !== 'duvida');
   const duv = com.filter((e) => e.chuva!.veredito === 'duvida');
   const exemplo = [...duv, ...ok].sort((a, b) => b.area_ha - a.area_ha)[0];
+  const m1 = data.meta.s1;
+  const s1 = data.events.filter((e) => e.s1 && e.certeza !== 'possivel');
+  const s1a = s1.filter((e) => e.s1!.alerta);
+  const antes = s1a.filter((e) => (e.s1!.dias_antes ?? 0) > 0);
+  const ex2 = [...antes, ...s1a].sort((a, b) => (b.certeza === 'confirmado' ? 1 : 0) - (a.certeza === 'confirmado' ? 1 : 0) || b.area_ha - a.area_ha)[0];
   return (
     <div className="page">
       <header className="page-head">
@@ -104,9 +109,32 @@ export default function Danca({ data, onMap }: { data: RoData; onMap: () => void
         <p className="fine">Regra: chuva de {fmtNum(ch?.limite_mm ?? 5)} mm ou mais nas 48 h antes de uma imagem conta como chão molhado. FIRMS (fogo) e SEDAM-RO (áreas protegidas) entram como contexto.</p>
       </Card>
 
+      <Card c={CASOS[1]}>
+        {s1.length > 0 ? (
+          <div className="caso-live">
+            <div className="stats3">
+              <div><b className="s1">{s1a.length} de {s1.length}</b><span>lugares em que o Sentinel-1 também viu a copa cair</span></div>
+              <div><b className="ok">{antes.length}</b><span>em que o Sentinel-1 avisou antes do NISAR</span></div>
+              <div><b>{m1?.revisita_juntos_mediana_dias ? `${fmtNum(m1.revisita_juntos_mediana_dias, 1)} dias` : '—'}</b><span>entre imagens com os dois juntos (NISAR sozinho: 12)</span></div>
+            </div>
+            <p className="fine">Nos outros {s1.length - s1a.length}, o Sentinel-1 não viu queda forte: a mudança pode estar debaixo da copa, onde só a banda L do NISAR chega.</p>
+            {ex2?.s1 && (
+              <div className="caso-ex">
+                <p className="fine">Exemplo: {haTxt(ex2.area_ha)} em {ex2.municipio}</p>
+                <AlertaDuasEtapas s={ex2.s1} fogo={ex2.fogo_dias.length} />
+              </div>
+            )}
+            <button type="button" className="btn primary" onClick={onMap}>Ver no mapa</button>
+          </div>
+        ) : (
+          <p className="fine">Aguardando as imagens do Sentinel-1.</p>
+        )}
+        <p className="fine">Regra: queda de {fmtNum(m1?.queda_db ?? 1.5, 1)} dB ou mais no eco VH do Sentinel-1 em relação à floresta em volta, confirmada na imagem seguinte da mesma órbita.</p>
+      </Card>
+
       <section>
         <h2 className="sec">Próximas danças</h2>
-        <div className="casos">{CASOS.slice(1).map((c) => <Card key={c.n} c={c} />)}</div>
+        <div className="casos">{CASOS.slice(2).map((c) => <Card key={c.n} c={c} />)}</div>
       </section>
 
       <section className="glass block">

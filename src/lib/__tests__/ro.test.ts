@@ -136,3 +136,17 @@ describe('corte ou chuva (NISAR + Meteomatics)', () => {
     expect(r.length).toBe(events.length - comChuva.filter((e) => e.chuva!.veredito === 'duvida').length);
   });
 });
+
+describe('alerta em 2 etapas (Sentinel-1 + NISAR)', () => {
+  it('dias_antes bate com as datas', () => {
+    for (const e of events.filter((x) => x.s1?.alerta)) {
+      const s = e.s1!;
+      const d = Math.round((Date.parse(s.queda_nisar) - Date.parse(s.alerta!)) / 86400000);
+      expect(s.dias_antes).toBe(d);
+      expect(s.alerta! > s.base_nisar).toBe(true);
+    }
+  });
+  it('juntos passam mais vezes que o NISAR sozinho', () => {
+    for (const e of events.filter((x) => x.s1?.revisita_juntos_dias)) expect(e.s1!.revisita_juntos_dias!).toBeLessThan(12);
+  });
+});

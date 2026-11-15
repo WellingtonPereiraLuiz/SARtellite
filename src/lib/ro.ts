@@ -13,6 +13,11 @@ export interface Chuva {
   secas_depois: number;                  // passagens seguintes sem chuva em que a queda continuou
   veredito: Veredito;
 }
+/** Caso 2, "Alerta em 2 etapas": Sentinel-1 (banda C, copa) avisa; NISAR (banda L, troncos) confirma. */
+export interface S1 {
+  imagens: number; orbitas: number; base_nisar: string; queda_nisar: string; alerta: string | null; dias_antes?: number;
+  revisita_dias: number | null; revisita_juntos_dias: number | null; serie: [string, number][];
+}
 export interface Rain { fonte: string; modelo: string; parametro: string; limite_mm: number; daily: [string, number][]; periods: number[] }
 
 export interface Serie { frame: string; dates: string[]; here: (number | null)[]; around: (number | null)[] }
@@ -21,7 +26,7 @@ export interface ForestEvent {
   id: string; kind: 'floresta'; date: string; first_date: string; period: number; area_ha: number; lon: number; lat: number;
   municipio: string | null; cd_mun: string | null; protegida: { nome: string; tipo: 'ti' | 'uc' }[]; certeza: Certeza;
   passagens_confirmaram: number; quadros: number; inpe: { classe: string; data: string }[]; fogo_dias: string[];
-  serie: Serie | null; geometry: unknown; gtype: string; chuva?: Chuva;
+  serie: Serie | null; geometry: unknown; gtype: string; chuva?: Chuva; s1?: S1;
 }
 /** Foco de calor: [lon, lat, dia desde o início do NISAR, índice do município, 1 se caiu em floresta, hora local de RO] */
 export type FireRow = [number, number, number, number, number, number?];
@@ -36,6 +41,7 @@ export interface Meta {
   floresta: { eventos: number; mostrados: number; ha_mostrados: number; por_certeza: Record<string, number>; com_fogo: number; validacao_pixels: { our_ha: number; deter_ha: number; deter_polys: number; precision_near_deter: number; deter_polys_found: number }; params: Record<string, number> };
   deter: { poligonos: number; por_classe: Record<string, number> };
   fogo: { focos: number; fonte: string; url: string };
+  s1?: { fonte: string; url: string; queda_db: number; com_alerta: number; sem_alerta: number; sem_dado: number; dias_antes_mediana: number | null; avisou_antes: number; revisita_mediana_dias: number | null; revisita_juntos_mediana_dias: number | null };
   chuva?: { fonte: string; modelo: string; limite_mm: number; corte: number; corte_apos_chuva: number; duvida: number; sem_dado: number; url: string };
 }
 export interface RoData {

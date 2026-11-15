@@ -30,7 +30,9 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
   const [terreno, setTerreno] = useState(true);
   const [compare, setCompare] = useState<Serie3[]>(['floresta', 'chuva']);
   const [listOpen, setListOpen] = useState(true);
-  const [tsOpen, setTsOpen] = useState(() => window.innerWidth >= 760);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [tsOpen, setTsOpen] = useState(false);
 
   const events = useMemo(() => filterEvents(data.events, filters), [data, filters]);
   const fires = useMemo(() => filterFires(data.fires, data.fireMun, filters), [data, filters]);
@@ -83,23 +85,40 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
         onMoveOut={setMovedOut}
       />
 
-      <div className="panel glass">
-        <div className="search">
-          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-          <input id="busca" type="search" placeholder="Buscar município, estado ou país" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar lugar" autoComplete="off"
-            onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) choose(results[0]); }} />
-          {results.length > 0 && (
-            <ul className="results glass" role="listbox">
-              {results.map((p) => <li key={p.n + p.t}><button type="button" onClick={() => choose(p)}><b>{p.n}</b><span>{p.t === 'municipio' ? 'Município de RO' : p.t === 'estado' ? 'Estado' : 'País'}</span></button></li>)}
-            </ul>
+      <div className={`panel glass${panelOpen ? '' : ' compact'}`}>
+        <div className="p-head">
+          <button type="button" className="p-icon" aria-label={searchOpen ? 'Fechar busca' : 'Buscar lugar'} aria-expanded={searchOpen} onClick={() => setSearchOpen((v) => !v)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" strokeWidth="2" /><path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+          </button>
+          {searchOpen ? (
+            <div className="search">
+              <input id="busca" type="search" placeholder="Município, estado ou país" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Buscar lugar" autoComplete="off" autoFocus
+                onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) { choose(results[0]); setSearchOpen(false); } if (e.key === 'Escape') setSearchOpen(false); }} />
+              {results.length > 0 && (
+                <ul className="results glass" role="listbox">
+                  {results.map((p) => <li key={p.n + p.t}><button type="button" onClick={() => { choose(p); setSearchOpen(false); }}><b>{p.n}</b><span>{p.t === 'municipio' ? 'Município de RO' : p.t === 'estado' ? 'Estado' : 'País'}</span></button></li>)}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <button type="button" className="p-scope" onClick={() => setPanelOpen((v) => !v)}>{munSel ? munSel.nome : 'Rondônia'}</button>
           )}
+          {munSel && !searchOpen && <button type="button" className="link" onClick={() => setMun(null)} aria-label="Voltar para o estado inteiro">×</button>}
+          <button type="button" className="p-toggle" aria-expanded={panelOpen} onClick={() => setPanelOpen((v) => !v)}>{panelOpen ? 'Fechar ▴' : 'Abrir ▾'}</button>
         </div>
 
-        <div className="scope">
-          <span>{munSel ? munSel.nome : 'Rondônia'}</span>
-          {munSel && <button type="button" className="link" onClick={() => setMun(null)}>× estado inteiro</button>}
-        </div>
+        {!panelOpen && (
+          <div className="p-mini" role="group" aria-label="Camadas">
+            {LAYERS.map((x) => (
+              <button key={x.l} type="button" className={`mini${filters.layers[x.l] ? ' on' : ''}`} aria-pressed={filters.layers[x.l]} onClick={() => toggle(x.l)} style={{ ['--c' as string]: x.color }}>
+                <i />{x.label}<b>{x.value}</b>
+              </button>
+            ))}
+          </div>
+        )}
 
+        {panelOpen && (
+          <>
         <div className="layers">
           {LAYERS.map((x) => (
             <button key={x.l} type="button" className={`layer${filters.layers[x.l] ? ' on' : ''}`} aria-pressed={filters.layers[x.l]} onClick={() => toggle(x.l)} style={{ ['--c' as string]: x.color }}>
@@ -143,6 +162,8 @@ export default function MapPage({ data, filters, setFilters, reduce, jump }: { d
               </ol>
             )}
           </div>
+        )}
+                </>
         )}
       </div>
 

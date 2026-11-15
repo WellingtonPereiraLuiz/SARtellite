@@ -93,5 +93,17 @@
    152.3
   ],
   "url": "https://www.meteomatics.com/en/weather-api/"
+ },
+ "s1": {
+  "fonte": "Sentinel-1 RTC (ESA/Copernicus) via Microsoft Planetary Computer",
+  "url": "https://planetarycomputer.microsoft.com/dataset/sentinel-1-rtc",
+  "queda_db": 1.5,
+  "com_alerta": 30,
+  "sem_alerta": 16,
+  "sem_dado": 0,
+  "dias_antes_mediana": 6.5,
+  "avisou_antes": 22,
+  "revisita_mediana_dias": 12.6,
+  "revisita_juntos_mediana_dias": 6.9
  }
 }

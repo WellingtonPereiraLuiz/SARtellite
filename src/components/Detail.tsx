@@ -1,5 +1,5 @@
 import { fmtDate, fmtNum } from '../lib/time';
-import { campos, CERTEZA, VEREDITO, type Chuva, type ForestEvent, type Municipio, type Serie } from '../lib/ro';
+import { campos, CERTEZA, VEREDITO, type Chuva, type ForestEvent, type Municipio, type S1, type Serie } from '../lib/ro';
 import { COLORS } from './MapView';
 
 function Spark({ s, mark }: { s: Serie; mark: string }) {
@@ -47,6 +47,42 @@ export function CorteOuChuva({ c, limite = 5 }: { c: Chuva; limite?: number }) {
   );
 }
 
+/** Caso 2: o Sentinel-1 avisa (copa, banda C); o NISAR confirma (troncos, banda L); o fogo diz se queimou. */
+export function AlertaDuasEtapas({ s, fogo }: { s: S1; fogo: number }) {
+  const W = 300, H = 64, L = 6, R = 6, T = 8, B = 16;
+  const pts = s.serie;
+  const t0 = Date.parse(pts[0][0]), t1 = Date.parse(pts[pts.length - 1][0]);
+  const vs = pts.map((p) => p[1]);
+  const lo = Math.min(...vs) - 0.3, hi = Math.max(...vs) + 0.3;
+  const x = (d: string) => L + ((Date.parse(d) - t0) / Math.max(1, t1 - t0)) * (W - L - R);
+  const y = (v: number) => T + (1 - (v - lo) / (hi - lo)) * (H - T - B);
+  const a = s.alerta;
+  const txt = !a
+    ? 'O Sentinel-1 não viu queda forte na copa. A mudança pode estar debaixo dela: só a banda L do NISAR enxerga troncos.'
+    : (s.dias_antes ?? 0) > 0
+      ? `O Sentinel-1 avisou ${s.dias_antes} dias antes; o NISAR confirmou que o tronco sumiu.`
+      : (s.dias_antes ?? 0) === 0
+        ? 'Os dois viram a queda na mesma semana.'
+        : `O NISAR viu primeiro; o Sentinel-1 confirmou na copa ${-(s.dias_antes ?? 0)} dias depois.`;
+  return (
+    <section className="a2e" aria-label="Alerta em 2 etapas">
+      <header><b>Alerta em 2 etapas</b><span className="pill" style={{ ['--c' as string]: a ? '#C9A6FF' : '#9fb3b8' }}><i />{a ? 'Dois satélites viram' : 'Só o NISAR viu'}</span></header>
+      <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Eco do Sentinel-1 no lugar menos a floresta em volta, imagem a imagem">
+        <line x1={x(s.queda_nisar)} x2={x(s.queda_nisar)} y1={T - 4} y2={H - B} className="a-nisar" />
+        {a && <line x1={x(a)} x2={x(a)} y1={T - 4} y2={H - B} className="a-s1" />}
+        <polyline points={pts.map((p) => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ')} className="a-line" />
+        {pts.map((p) => <circle key={p[0]} cx={x(p[0])} cy={y(p[1])} r={2} className="a-dot" />)}
+      </svg>
+      <ul className="steps2">
+        <li><i className="k1" /><span>1. Sentinel-1 avisa</span><b>{a ? fmtDate(a, false) : '—'}</b></li>
+        <li><i className="k2" /><span>2. NISAR confirma</span><b>{fmtDate(s.queda_nisar, false)}</b></li>
+        <li><i className="k3" /><span>Fogo perto (INPE)</span><b>{fogo ? `${fogo} ${fogo === 1 ? 'dia' : 'dias'}` : 'não'}</b></li>
+      </ul>
+      <p className="note">{txt} {s.revisita_juntos_dias ? `Juntos, os dois dão uma imagem a cada ${fmtNum(s.revisita_juntos_dias, 1)} dias aqui.` : ''}</p>
+    </section>
+  );
+}
+
 const classe = (c: string) => ({ DESMATAMENTO_CR: 'desmatamento', DESMATAMENTO_VEG: 'desmatamento', CICATRIZ_DE_QUEIMADA: 'área queimada', DEGRADACAO: 'floresta degradada' } as Record<string, string>)[c] ?? c.toLowerCase();
 
 function Shell({ tag, color, title, onClose, children }: { tag: string; color: string; title: string; onClose: () => void; children: React.ReactNode }) {
@@ -70,6 +106,7 @@ export function ForestDetail({ e, onClose }: { e: ForestEvent; onClose: () => vo
       </ul>
       {e.serie && <Spark s={e.serie} mark={e.date} />}
       {e.chuva && <CorteOuChuva c={e.chuva} />}
+      {e.s1 && e.s1.serie.length > 2 && <AlertaDuasEtapas s={e.s1} fogo={e.fogo_dias.length} />}
       <div className="clues">
         {e.inpe.length > 0 && <span className="clue">INPE: {classe(e.inpe[0].classe)} em {fmtDate(e.inpe[0].data, false)}</span>}
         {e.fogo_dias.length > 0 && <span className="clue fire">Fogo perto em {e.fogo_dias.length} {e.fogo_dias.length === 1 ? 'dia' : 'dias'}</span>}

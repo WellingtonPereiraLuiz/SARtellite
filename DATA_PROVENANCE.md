@@ -107,3 +107,12 @@ Chão molhado muda o eco do radar. Para não chamar de derrubada uma mudança qu
 - **Resultado (15/11):** dos 31 lugares mostrados, 4 `corte`, 16 `corte_apos_chuva`, 9 `duvida`, 2 sem imagem de antes. Contando os 46 detectados: 8 / 19 / 17 / 2.
 - **Linha do tempo:** média diária de chuva sobre um contorno simplificado de RO, somada por período de 12 dias.
 - **Limites:** chuva de modelo (não de pluviômetro), em ponto; 5 mm é um limite escolhido, não calibrado em campo. A lavoura saiu do site; o detector continua no pipeline.
+
+## 10. Caso 2: "Alerta em 2 etapas" (`r12_s1.py`)
+
+- **Dado:** Sentinel-1 RTC (banda C, polarização VH, 10 m), todas as imagens de jun a 8 nov/2026 sobre cada lugar de floresta, via Planetary Computer.
+- **Medida:** eco VH (dB) dentro da mancha menos a floresta num anel de 1,5 km em volta (com folga de 200 m), imagem a imagem.
+- **Alerta:** por órbita, base = mediana antes da imagem NISAR "de antes"; alerta = primeira imagem com queda de 1,5 dB ou mais, confirmada na imagem seguinte da mesma órbita.
+- **Resultado (15/11), 31 lugares do mapa:** o Sentinel-1 também viu a copa cair em 23; avisou antes do NISAR em 16 (mediana de 8 dias antes). Nos outros 8, a banda C não viu queda forte: a mudança pode estar debaixo da copa.
+- **Revisita:** aqui o Sentinel-1 sozinho passa a cada ~12,6 dias (mediana), como o NISAR. O ganho é passarem em dias diferentes: juntos, uma imagem a cada ~7 dias.
+- **Limites:** 1,5 dB é um limite escolhido (o sistema RADD, da Universidade de Wageningen, usa ideia parecida, com estatística mais completa); manchas pequenas têm poucos pixels de 10 m dentro da mancha.
